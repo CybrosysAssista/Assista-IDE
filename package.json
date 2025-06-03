@@ -1,9 +1,9 @@
 {
-  "name": "code-oss-dev",
+  "name": "assista",
   "version": "1.101.0",
   "distro": "a4a51f792a6f0ce2060af18f27dcb4ae0895851d",
   "author": {
-    "name": "Microsoft Corporation"
+    "name": "Cybrosys Technologies"
   },
   "license": "MIT",
   "main": "./out/main.js",

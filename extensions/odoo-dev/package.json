@@ -1,0 +1,105 @@
+{
+  "name": "odoo-dev",
+  "displayName": "Odoo Dev",
+  "description": "Development helper for Odoo addons",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:xml",
+    "onCommand:odoo-dev.createModuleBasic",
+    "onCommand:odoo-dev.createModuleAdvanced"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "odoo-dev.createModuleBasic",
+        "title": "Basic"
+      },
+      {
+        "command": "odoo-dev.createModuleAdvanced",
+        "title": "Advanced"
+      },
+      {
+        "command": "odoo-dev.createModuleWebsite",
+        "title": "Website Theme"
+      },
+      {
+        "command": "odoo-dev.createModuleowlBasic",
+        "title": "Owl Basic Module"
+      },
+      {
+        "command": "odoo-dev.createModuleowlAdvanced",
+        "title": "Owl Advanced Module"
+      },
+      {
+        "command": "odoo-dev.createModuleWithSystrayMenu",
+        "title": "Odoo module with Systray menu"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "odoo-dev.createModuleSubmenu",
+        "label": "Create Odoo Module"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "submenu": "odoo-dev.createModuleSubmenu",
+          "when": "explorerResourceIsFolder",
+          "group": "navigation@1"
+        }
+      ],
+      "odoo-dev.createModuleSubmenu": [
+        {
+          "command": "odoo-dev.createModuleBasic"
+        },
+        {
+          "command": "odoo-dev.createModuleAdvanced"
+        },
+        {
+          "command": "odoo-dev.createModuleWebsite"
+        },
+        {
+          "command": "odoo-dev.createModuleowlBasic"
+        },
+        {
+          "command": "odoo-dev.createModuleowlAdvanced"
+        },
+        {
+          "command": "odoo-dev.createModuleWithSystrayMenu"
+        }
+      ]
+    },
+    "snippets": [
+      {
+        "language": "python",
+        "path": "./snippets/python.json"
+      },
+      {
+        "language": "xml",
+        "path": "./snippets/xml.json"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.99.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "eslint": "^9.25.1",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}

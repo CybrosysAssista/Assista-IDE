@@ -1,0 +1,99 @@
+{   "Odoo Window Action": {
+      "prefix": "window_action",
+      "body": [
+          "<record id=\"action_model_name\" model=\"ir.actions.act_window\">",
+          "  <field name=\"name\">Name</field>",
+          "  <field name=\"res_model\">model.name</field>",
+          "  <field name=\"view_mode\">list,form,pivot</field>",
+          "</record>"
+      ],
+      "description": "Odoo Window Action"
+    }, 
+    "Odoo Form View": {
+      "prefix": "form",
+      "body": [
+        "<record id=\"${1:model_view_form}\" model=\"ir.ui.view\">",
+        "    <field name=\"name\">${2:Model.view.form}</field>",
+        "    <field name=\"model\">${3:model.name}</field>",
+        "    <field name=\"arch\" type=\"xml\">",
+        "        <form string=\"${4:Form Title}\">",
+        "            <sheet>",
+        "                <group>",
+        "                    <field name=\"${5:field_name}\"/>",
+        "                </group>",
+        "            </sheet>",
+        "        </form>",
+        "    </field>",
+        "</record>"
+      ],
+      "description": "Odoo XML Form View"
+    },
+    "Odoo List View": {
+      "prefix": "list",
+      "body": [
+        "<record id=\"${1:model_view_list}\" model=\"ir.ui.view\">",
+        "    <field name=\"name\">${2:Model.view.list}</field>",
+        "    <field name=\"model\">${3:model.name}</field>",
+        "    <field name=\"arch\" type=\"xml\">",
+        "        <list string=\"${4:List Title}\">",
+        "        </list>",
+        "    </list>",
+        "</record>"
+      ],
+      "description": "Odoo XML List View"
+    },
+    "Odoo Pivot View": {
+      "prefix": "pivot",
+      "body":[
+        "<record id=\"${1:model_view_pivot}\" model=\"ir.ui.view\">",
+        "    <field name=\"name\">${2:model.view.pivot}</field>",
+        "    <field name=\"model\">${3:model.name}</field>",
+        "    <field name=\"arch\" type=\"xml\">",
+        "    <pivot string=\"Pivot String\">",
+        "        <field name=\"state\" type=\"row\"/>",
+        "        <field name=\"employee_id\" type=\"col\"/>",
+        "        <field name=\"total_amount\" type=\"measure\"/>",
+        "    </pivot>",
+        "    </field>",
+        "</record>"
+
+      ],
+      "description": "Odoo XML Pivot View"
+    },
+    "Odoo Calendar View": {
+      "prefix": "calendar",
+      "body": [
+          "<record id=\"${1:model_view_calendar}\" model=\"ir.ui.view\">",
+          "<field name=\"name\">model.view.calendar</field>",
+          "<field name=\"model\">model.name</field>",
+          "<field name=\"arch\" type=\"xml\">",
+          "    <calendar date_start=\"\" string=\"\" mode=\"month\" color=\"\" event_open_popup=\"true\" quick_add=\"false\" date_stop=\"\">",
+          "        <field name=\"field_name\"/>",
+          "        <field name=\"name\" avatar_field=\"field_name\"/>",
+          "        <field name=\"field_name\"/>",
+          "        <field name=\"field_name\"/>",
+          "    </calendar>",
+          "</field>",
+        "</record>"
+      ],
+      "description": "Odoo XML Calendar view"
+    },
+    "Odoo Graph View": {
+      "prefix": "graph",
+      "body": [
+          "<record id=\"model_graph_view\" model=\"ir.ui.view\">",
+          "    <field name=\"name\">model.name.graph.view</field>",
+          "    <field name=\"model\">model.name</field>",
+          "    <field name=\"type\">graph</field>",
+          "    <field name=\"arch\" type=\"xml\">",
+          "        <graph string=\"\" type=\"\">",
+          "            <field name=\"field_name\" group=\"True\"/>",
+          "            <field name=\"field_name\" operator=\"*\"/>",
+          "        </graph>",
+          "    </field>",
+          "</record>"
+      ],
+      "description": "Odoo XML Graph view"
+    }
+  }
+  
