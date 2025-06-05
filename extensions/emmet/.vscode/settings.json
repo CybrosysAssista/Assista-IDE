@@ -1,3 +1,5 @@
 {
-    "emmet.excludeLanguages": []
+    "emmet.excludeLanguages": [],
+      "workbench.colorTheme": "CIDE AI Theme"
+
 }

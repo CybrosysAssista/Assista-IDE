@@ -2,8 +2,8 @@
 	"name": "roo-cline",
 	"displayName": "%extension.displayName%",
 	"description": "%extension.description%",
-	"publisher": "Cybrosys Technologies",
-	"version": "2.0.1",
+	"publisher": "RooVeterinaryInc",
+	"version": "2.0.2",
 	"icon": "assets/icons/icon.png",
 	"galleryBanner": {
 		"color": "#617A91",
