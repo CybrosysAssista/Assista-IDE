@@ -1,0 +1,23 @@
+{
+  "name": "cide-ai-theme",
+  "displayName": "Cide AI Theme",
+  "description": "Default theme for Cide AI",
+  "version": "0.0.1",
+  "publisher": "cide-ai",
+  "isBuiltin": true,
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Cide AI",
+        "uiTheme": "vs-dark",
+        "path": "./themes/cide-ai-color-theme.json"
+      }
+    ]
+  }
+}

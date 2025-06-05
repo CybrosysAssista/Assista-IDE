@@ -1,0 +1,38 @@
+{
+  "name": "oss-extension-search-editor-shortcut",
+  "displayName": "Search Editor Shortcut",
+  "description": "Rebind Ctrl+Shift+F to open Search Editor directly.",
+  "version": "1.0.0",
+  "publisher": "oss",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "activationEvents": [
+    "onCommand:searchEditorShortcut.openSearchEditor"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "searchEditorShortcut.openSearchEditor",
+        "title": "Open Search Editor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "searchEditorShortcut.openSearchEditor",
+        "key": "ctrl+shift+f",
+        "when": "editorTextFocus || !editorFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.70.0",
+    "typescript": "^4.0.0",
+    "vscode": "^1.1.37"
+  }
+}
