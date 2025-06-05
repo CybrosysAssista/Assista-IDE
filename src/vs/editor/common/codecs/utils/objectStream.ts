@@ -3,6 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+import { ITextModel } from '../../model.js';
+import { VSBuffer } from '../../../../base/common/buffer.js';
 import { assertNever } from '../../../../base/common/assert.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
 import { ObservableDisposable } from '../../../../base/common/observableDisposable.js';
@@ -26,7 +28,7 @@ export class ObjectStream<T extends object> extends ObservableDisposable impleme
 	 * Interval reference that is used to periodically send
 	 * objects to the stream in the background.
 	 */
-	private timeoutHandle: Timeout | undefined;
+	private timeoutHandle: ReturnType<typeof setTimeout> | undefined;
 
 	constructor(
 		private readonly data: Generator<T, undefined>,
@@ -92,7 +94,7 @@ export class ObjectStream<T extends object> extends ObservableDisposable impleme
 		}
 
 		clearTimeout(this.timeoutHandle);
-		this.timeoutHandle = undefined;
+		delete this.timeoutHandle;
 
 		return this;
 	}
@@ -209,6 +211,16 @@ export class ObjectStream<T extends object> extends ObservableDisposable impleme
 	): ObjectStream<T> {
 		return new ObjectStream(arrayToGenerator(array), cancellationToken);
 	}
+
+	/**
+	 * Create new instance of the stream from a provided text model.
+	 */
+	public static fromTextModel(
+		model: ITextModel,
+		cancellationToken?: CancellationToken,
+	): ObjectStream<VSBuffer> {
+		return new ObjectStream(modelToGenerator(model), cancellationToken);
+	}
 }
 
 /**
@@ -218,6 +230,33 @@ export const arrayToGenerator = <T extends NonNullable<unknown>>(array: T[]): Ge
 	return (function* (): Generator<T, undefined> {
 		for (const item of array) {
 			yield item;
+		}
+	})();
+};
+
+/**
+ * Create a generator out of a provided text model.
+ */
+export const modelToGenerator = (model: ITextModel): Generator<VSBuffer, undefined> => {
+	return (function* (): Generator<VSBuffer, undefined> {
+		const totalLines = model.getLineCount();
+		let currentLine = 1;
+
+		while (currentLine <= totalLines) {
+			if (model.isDisposed()) {
+				return undefined;
+			}
+
+			yield VSBuffer.fromString(
+				model.getLineContent(currentLine),
+			);
+			if (currentLine !== totalLines) {
+				yield VSBuffer.fromString(
+					model.getEOL(),
+				);
+			}
+
+			currentLine++;
 		}
 	})();
 };

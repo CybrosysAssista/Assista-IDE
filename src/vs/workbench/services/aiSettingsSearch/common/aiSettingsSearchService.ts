@@ -5,12 +5,11 @@
 
 import { DeferredPromise, raceCancellation } from '../../../../base/common/async.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { Disposable, IDisposable } from '../../../../base/common/lifecycle.js';
+import { IDisposable } from '../../../../base/common/lifecycle.js';
 import { InstantiationType, registerSingleton } from '../../../../platform/instantiation/common/extensions.js';
 import { AiSettingsSearchResult, AiSettingsSearchResultKind, IAiSettingsSearchProvider, IAiSettingsSearchService } from './aiSettingsSearch.js';
 
-export class AiSettingsSearchService extends Disposable implements IAiSettingsSearchService {
+export class AiSettingsSearchService implements IAiSettingsSearchService {
 	readonly _serviceBrand: undefined;
 	private static readonly MAX_PICKS = 5;
 
@@ -18,16 +17,12 @@ export class AiSettingsSearchService extends Disposable implements IAiSettingsSe
 	private _llmRankedResultsPromises: Map<string, DeferredPromise<string[]>> = new Map();
 	private _embeddingsResultsPromises: Map<string, DeferredPromise<string[]>> = new Map();
 
-	private _onProviderRegistered: Emitter<void> = this._register(new Emitter<void>());
-	readonly onProviderRegistered: Event<void> = this._onProviderRegistered.event;
-
 	isEnabled(): boolean {
 		return this._providers.length > 0;
 	}
 
 	registerSettingsSearchProvider(provider: IAiSettingsSearchProvider): IDisposable {
 		this._providers.push(provider);
-		this._onProviderRegistered.fire();
 		return {
 			dispose: () => {
 				const index = this._providers.indexOf(provider);
@@ -38,26 +33,17 @@ export class AiSettingsSearchService extends Disposable implements IAiSettingsSe
 		};
 	}
 
-	startSearch(query: string, embeddingsOnly: boolean, token: CancellationToken): void {
+	startSearch(query: string, token: CancellationToken): void {
 		if (!this.isEnabled()) {
 			throw new Error('No settings search providers registered');
 		}
 
-		this._embeddingsResultsPromises.delete(query);
-		this._llmRankedResultsPromises.delete(query);
-
-		this._providers.forEach(provider => provider.searchSettings(query, { limit: AiSettingsSearchService.MAX_PICKS, embeddingsOnly }, token));
+		this._providers.forEach(provider => provider.searchSettings(query, { limit: AiSettingsSearchService.MAX_PICKS }, token));
 	}
 
 	async getEmbeddingsResults(query: string, token: CancellationToken): Promise<string[] | null> {
 		if (!this.isEnabled()) {
 			throw new Error('No settings search providers registered');
-		}
-
-		const existingPromise = this._embeddingsResultsPromises.get(query);
-		if (existingPromise) {
-			const result = await existingPromise.p;
-			return result ?? null;
 		}
 
 		const promise = new DeferredPromise<string[]>();
@@ -69,12 +55,6 @@ export class AiSettingsSearchService extends Disposable implements IAiSettingsSe
 	async getLLMRankedResults(query: string, token: CancellationToken): Promise<string[] | null> {
 		if (!this.isEnabled()) {
 			throw new Error('No settings search providers registered');
-		}
-
-		const existingPromise = this._llmRankedResultsPromises.get(query);
-		if (existingPromise) {
-			const result = await existingPromise.p;
-			return result ?? null;
 		}
 
 		const promise = new DeferredPromise<string[]>();
@@ -92,19 +72,13 @@ export class AiSettingsSearchService extends Disposable implements IAiSettingsSe
 			const promise = this._embeddingsResultsPromises.get(result.query);
 			if (promise) {
 				promise.complete(result.settings);
-			} else {
-				const parkedPromise = new DeferredPromise<string[]>();
-				parkedPromise.complete(result.settings);
-				this._embeddingsResultsPromises.set(result.query, parkedPromise);
+				this._embeddingsResultsPromises.delete(result.query);
 			}
 		} else if (result.kind === AiSettingsSearchResultKind.LLM_RANKED) {
 			const promise = this._llmRankedResultsPromises.get(result.query);
 			if (promise) {
 				promise.complete(result.settings);
-			} else {
-				const parkedPromise = new DeferredPromise<string[]>();
-				parkedPromise.complete(result.settings);
-				this._llmRankedResultsPromises.set(result.query, parkedPromise);
+				this._llmRankedResultsPromises.delete(result.query);
 			}
 		}
 	}

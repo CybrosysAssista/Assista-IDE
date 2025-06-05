@@ -74,7 +74,7 @@ export class NotebookVariableRenderer implements ITreeRenderer<INotebookVariable
 		}));
 	}
 
-	disposeElement(element: ITreeNode<INotebookVariableElement, FuzzyScore>, index: number, templateData: IVariableTemplateData): void {
+	disposeElement(element: ITreeNode<INotebookVariableElement, FuzzyScore>, index: number, templateData: IVariableTemplateData, height: number | undefined): void {
 		templateData.elementDisposables.clear();
 	}
 

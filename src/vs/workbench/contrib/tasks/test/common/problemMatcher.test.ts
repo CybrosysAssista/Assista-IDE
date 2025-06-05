@@ -6,7 +6,6 @@ import * as matchers from '../../common/problemMatcher.js';
 
 import assert from 'assert';
 import { ValidationState, IProblemReporter, ValidationStatus } from '../../../../../base/common/parsers.js';
-import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/test/common/utils.js';
 
 class ProblemReporter implements IProblemReporter {
 	private _validationStatus: ValidationStatus;
@@ -60,8 +59,6 @@ suite('ProblemPatternParser', () => {
 	let reporter: ProblemReporter;
 	let parser: matchers.ProblemPatternParser;
 	const testRegexp = new RegExp('test');
-
-	ensureNoDisposablesAreLeakedInTestSuite();
 
 	setup(() => {
 		reporter = new ProblemReporter();

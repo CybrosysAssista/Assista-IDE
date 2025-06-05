@@ -30,9 +30,8 @@ import { ITitleService } from '../../../services/title/browser/titleService.js';
 import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Codicon } from '../../../../base/common/codicons.js';
-import { IsAuxiliaryWindowContext, IsAuxiliaryWindowFocusedContext, IsCompactTitleBarContext } from '../../../common/contextkeys.js';
+import { IsAuxiliaryTitleBarContext, IsAuxiliaryWindowFocusedContext, IsCompactTitleBarContext } from '../../../common/contextkeys.js';
 import { Categories } from '../../../../platform/action/common/actionCommonCategories.js';
-import { GroupIdentifier } from '../../../common/editor.js';
 
 export interface IAuxiliaryEditorPartOpenOptions extends IAuxiliaryWindowOpenOptions {
 	readonly state?: IEditorPartUIState;
@@ -68,11 +67,11 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: 'workbench.action.enableCompactAuxiliaryWindow',
-			title: localize('enableCompactAuxiliaryWindow', "Turn On Compact Mode"),
+			title: localize('enableCompactAuxiliaryWindow', "Set Compact Mode"),
 			icon: Codicon.screenFull,
 			menu: {
 				id: MenuId.LayoutControlMenu,
-				when: ContextKeyExpr.and(IsCompactTitleBarContext.toNegated(), IsAuxiliaryWindowContext),
+				when: ContextKeyExpr.and(IsAuxiliaryTitleBarContext, IsCompactTitleBarContext.toNegated()),
 				order: 0
 			}
 		});
@@ -88,11 +87,11 @@ registerAction2(class extends Action2 {
 	constructor() {
 		super({
 			id: 'workbench.action.disableCompactAuxiliaryWindow',
-			title: localize('disableCompactAuxiliaryWindow', "Turn Off Compact Mode"),
+			title: localize('disableCompactAuxiliaryWindow', "Unset Compact Mode"),
 			icon: Codicon.screenNormal,
 			menu: {
 				id: MenuId.LayoutControlMenu,
-				when: ContextKeyExpr.and(IsCompactTitleBarContext, IsAuxiliaryWindowContext),
+				when: ContextKeyExpr.and(IsAuxiliaryTitleBarContext, IsCompactTitleBarContext),
 				order: 0
 			}
 		});
@@ -198,16 +197,12 @@ export class AuxiliaryEditorPart {
 		disposables.add(this.editorPartsView.registerPart(editorPart));
 		editorPart.create(editorPartContainer);
 
-		const scopedEditorPartInstantiationService = disposables.add(editorPart.scopedInstantiationService.createChild(new ServiceCollection(
-			[IEditorService, this.editorService.createScoped(editorPart, disposables)]
-		)));
-
 		// Titlebar
 		let titlebarPart: IAuxiliaryTitlebarPart | undefined = undefined;
 		let titlebarVisible = false;
 		const useCustomTitle = isNative && hasCustomTitlebar(this.configurationService); // custom title in aux windows only enabled in native
 		if (useCustomTitle) {
-			titlebarPart = disposables.add(this.titleService.createAuxiliaryTitlebarPart(auxiliaryWindow.container, editorPart, scopedEditorPartInstantiationService));
+			titlebarPart = disposables.add(this.titleService.createAuxiliaryTitlebarPart(auxiliaryWindow.container, editorPart));
 			titlebarPart.updateOptions({ compact });
 			titlebarVisible = shouldShowCustomTitleBar(this.configurationService, auxiliaryWindow.window, undefined);
 
@@ -231,11 +226,11 @@ export class AuxiliaryEditorPart {
 
 			updateTitlebarVisibility(false);
 		} else {
-			disposables.add(scopedEditorPartInstantiationService.createInstance(WindowTitle, auxiliaryWindow.window));
+			disposables.add(this.instantiationService.createInstance(WindowTitle, auxiliaryWindow.window, editorPart));
 		}
 
 		// Statusbar
-		const statusbarPart = disposables.add(this.statusbarService.createAuxiliaryStatusbarPart(auxiliaryWindow.container, scopedEditorPartInstantiationService));
+		const statusbarPart = disposables.add(this.statusbarService.createAuxiliaryStatusbarPart(auxiliaryWindow.container));
 		let statusbarVisible = !compact && this.configurationService.getValue<boolean>(AuxiliaryEditorPart.STATUS_BAR_VISIBILITY) !== false;
 		disposables.add(this.configurationService.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration(AuxiliaryEditorPart.STATUS_BAR_VISIBILITY)) {
@@ -304,13 +299,14 @@ export class AuxiliaryEditorPart {
 		}));
 
 		// Have a scoped instantiation service that is scoped to the auxiliary window
-		const scopedInstantiationService = disposables.add(scopedEditorPartInstantiationService.createChild(new ServiceCollection(
-			[IStatusbarService, this.statusbarService.createScoped(statusbarPart, disposables)]
+		const instantiationService = disposables.add(this.instantiationService.createChild(new ServiceCollection(
+			[IStatusbarService, this.statusbarService.createScoped(statusbarPart, disposables)],
+			[IEditorService, this.editorService.createScoped(editorPart, disposables)]
 		)));
 
 		return {
 			part: editorPart,
-			instantiationService: scopedInstantiationService,
+			instantiationService,
 			disposables
 		};
 	}
@@ -324,8 +320,6 @@ class AuxiliaryEditorPartImpl extends EditorPart implements IAuxiliaryEditorPart
 	readonly onWillClose = this._onWillClose.event;
 
 	private readonly optionsDisposable = this._register(new MutableDisposable());
-
-	private isCompact = false;
 
 	constructor(
 		windowId: number,
@@ -345,28 +339,14 @@ class AuxiliaryEditorPartImpl extends EditorPart implements IAuxiliaryEditorPart
 	}
 
 	updateOptions(options: { compact: boolean }): void {
-		this.isCompact = options.compact;
-
-		if (options.compact) {
-			if (!this.optionsDisposable.value) {
-				this.optionsDisposable.value = this.enforcePartOptions({
-					showTabs: 'none',
-					closeEmptyGroups: true
-				});
-			}
-		} else {
+		if (options.compact && !this.optionsDisposable.value) {
+			this.optionsDisposable.value = this.enforcePartOptions({
+				showTabs: 'none',
+				closeEmptyGroups: true
+			});
+		} else if (!options.compact) {
 			this.optionsDisposable.clear();
 		}
-	}
-
-	override addGroup(location: IEditorGroupView | GroupIdentifier, direction: GroupDirection, groupToCopy?: IEditorGroupView): IEditorGroupView {
-		if (this.isCompact) {
-			// When in compact mode, we prefer to open groups in the main part
-			// as compact mode is typically meant for showing just 1 editor.
-			location = this.editorPartsView.mainPart.activeGroup;
-		}
-
-		return super.addGroup(location, direction, groupToCopy);
 	}
 
 	override removeGroup(group: number | IEditorGroupView, preserveFocus?: boolean): void {

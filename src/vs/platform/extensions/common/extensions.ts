@@ -104,7 +104,6 @@ export interface ICodeActionContribution {
 export interface IAuthenticationContribution {
 	readonly id: string;
 	readonly label: string;
-	readonly issuerGlobs?: string[];
 }
 
 export interface IWalkthroughStep {
@@ -185,14 +184,6 @@ export interface IToolContribution {
 	userDescription?: string;
 }
 
-export interface IToolSetContribution {
-	name: string;
-	referenceName: string;
-	description: string;
-	icon?: string;
-	tools: string[];
-}
-
 export interface IMcpCollectionContribution {
 	readonly id: string;
 	readonly label: string;
@@ -225,7 +216,6 @@ export interface IExtensionContributions {
 	readonly debugVisualizers?: IDebugVisualizationContribution[];
 	readonly chatParticipants?: ReadonlyArray<IChatParticipantContribution>;
 	readonly languageModelTools?: ReadonlyArray<IToolContribution>;
-	readonly languageModelToolSets?: ReadonlyArray<IToolSetContribution>;
 	readonly mcpServerDefinitionProviders?: ReadonlyArray<IMcpCollectionContribution>;
 }
 

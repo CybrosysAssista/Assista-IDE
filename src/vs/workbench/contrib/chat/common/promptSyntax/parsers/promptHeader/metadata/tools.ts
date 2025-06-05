@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PromptMetadataRecord } from './base/record.js';
+import { PromptMetadataRecord } from './record.js';
 import { localize } from '../../../../../../../../nls.js';
+import { assert } from '../../../../../../../../base/common/assert.js';
 import { PromptMetadataDiagnostic, PromptMetadataError, PromptMetadataWarning } from '../diagnostics.js';
-import { FrontMatterSequence } from '../../../../../../../../editor/common/codecs/frontMatterCodec/tokens/frontMatterSequence.js';
 import { FrontMatterArray, FrontMatterRecord, FrontMatterString, FrontMatterToken, FrontMatterValueToken } from '../../../../../../../../editor/common/codecs/frontMatterCodec/tokens/index.js';
 
 /**
@@ -17,20 +17,7 @@ const RECORD_NAME = 'tools';
 /**
  * Prompt `tools` metadata record inside the prompt header.
  */
-export class PromptToolsMetadata extends PromptMetadataRecord<string[]> {
-
-	/**
-	 * List of all valid tool names that were found in
-	 * this metadata record.
-	 */
-	public override get value(): string[] | undefined {
-		if (this.validToolNames === undefined) {
-			return [];
-		}
-
-		return [...this.validToolNames.values()];
-	}
-
+export class PromptToolsMetadata extends PromptMetadataRecord {
 	public override get recordName(): string {
 		return RECORD_NAME;
 	}
@@ -46,36 +33,56 @@ export class PromptToolsMetadata extends PromptMetadataRecord<string[]> {
 	 */
 	private validToolNames: Set<string> | undefined;
 
+	/**
+	 * List of all valid tool names that were found in
+	 * this metadata record.
+	 */
+	public get toolNames(): readonly string[] {
+		if (this.validToolNames === undefined) {
+			return [];
+		}
+
+		return [...this.validToolNames.values()];
+	}
+
 	constructor(
 		recordToken: FrontMatterRecord,
 		languageId: string,
 	) {
-		super(RECORD_NAME, recordToken, languageId);
+		// sanity check on the name of the tools record
+		assert(
+			PromptToolsMetadata.isToolsRecord(recordToken),
+			`Record token must be a tools token, got '${recordToken.nameToken.text}'.`,
+		);
+
+		super(recordToken, languageId);
 	}
 
 	/**
 	 * Validate the metadata record and collect all issues
 	 * related to its content.
 	 */
-	public override validate(): readonly PromptMetadataDiagnostic[] {
+	protected override validate(): readonly PromptMetadataDiagnostic[] {
+		const result: PromptMetadataDiagnostic[] = [];
+
 		const { valueToken } = this.recordToken;
 
 		// validate that the record value is an array
 		if ((valueToken instanceof FrontMatterArray) === false) {
-			this.issues.push(
+			result.push(
 				new PromptMetadataError(
 					valueToken.range,
 					localize(
 						'prompt.header.metadata.tools.diagnostics.invalid-value-type',
-						"The '{0}' metadata must be an array of tool names, got '{2}'.",
+						"Value of the '{0}' metadata must be '{1}', got '{2}'.",
 						RECORD_NAME,
-						valueToken.valueTypeName.toString(),
+						'array',
+						valueToken.valueTypeName,
 					),
 				),
 			);
 
-			delete this.valueToken;
-			return this.issues;
+			return result;
 		}
 
 		this.valueToken = valueToken;
@@ -83,17 +90,17 @@ export class PromptToolsMetadata extends PromptMetadataRecord<string[]> {
 		// validate that all array items
 		this.validToolNames = new Set<string>();
 		for (const item of this.valueToken.items) {
-			this.issues.push(
+			result.push(
 				...this.validateToolName(item, this.validToolNames),
 			);
 		}
 
-		return this.issues;
+		return result;
 	}
 
 	/**
-	 * Validate an individual provided value token that is used
-	 * for a tool name.
+	 * Validate an individual provided value token that
+	 * is used for a tool name.
 	 */
 	private validateToolName(
 		valueToken: FrontMatterValueToken,
@@ -101,19 +108,16 @@ export class PromptToolsMetadata extends PromptMetadataRecord<string[]> {
 	): readonly PromptMetadataDiagnostic[] {
 		const issues: PromptMetadataDiagnostic[] = [];
 
-		// tool name must be a quoted or an unquoted 'string'
-		if (
-			(valueToken instanceof FrontMatterString) === false &&
-			(valueToken instanceof FrontMatterSequence) === false
-		) {
+		// tool name must be a string
+		if ((valueToken instanceof FrontMatterString) === false) {
 			issues.push(
 				new PromptMetadataWarning(
 					valueToken.range,
 					localize(
 						'prompt.header.metadata.tools.diagnostics.invalid-tool-name-type',
-						"Unexpected tool name '{0}', expected '{1}'.",
-						valueToken.text,
+						"Expected a tool name ({0}), got '{1}'.",
 						'string',
+						valueToken.text,
 					),
 				),
 			);

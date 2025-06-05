@@ -50,12 +50,12 @@ export function registerNewChatActions() {
 				icon: Codicon.plus,
 				f1: false,
 				precondition: ChatContextKeys.enabled,
-				menu: [MenuId.EditorTitle, MenuId.CompactWindowEditorTitle].map(id => ({
-					id,
+				menu: [{
+					id: MenuId.EditorTitle,
 					group: 'navigation',
+					order: 0,
 					when: ActiveEditorContext.isEqualTo(ChatEditorInput.EditorID),
-					order: 1
-				}))
+				}]
 			});
 		}
 		async run(accessor: ServicesAccessor, ...args: any[]) {

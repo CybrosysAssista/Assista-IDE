@@ -1,33 +1,48 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 260 260" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.41421;">
-    <g transform="matrix(1,0,0,1,-875,-1078)">
-        <g transform="matrix(1,0,0,1,0,999)">
-            <g transform="matrix(1,0,0,1,286,2.27374e-13)">
-                <g opacity="0.3">
-                    <g transform="matrix(1.06122,0,0,1.03704,-43.4898,-1044.78)">
-                        <path d="M841,1317L596,1317L596,1101L841,1101L841,1317ZM601.654,1106.79L601.654,1311.21L835.346,1311.21L835.346,1106.79L601.654,1106.79Z"/>
-                    </g>
-                    <g transform="matrix(1,0,0,1,1,-999)">
-                        <rect x="665" y="1100" width="18" height="216"/>
-                    </g>
-                    <g transform="matrix(1,0,0,1,0,-1000)">
-                        <rect x="701" y="1121" width="70" height="18"/>
-                    </g>
-                    <g transform="matrix(1,0,0,1,0,-860)">
-                        <rect x="701" y="1121" width="70" height="18"/>
-                    </g>
-                    <g transform="matrix(1.25714,0,0,1,-162.757,-965)">
-                        <rect x="701" y="1121" width="70" height="18"/>
-                    </g>
-                    <g transform="matrix(1.25714,0,0,1,-162.757,-930)">
-                        <rect x="701" y="1121" width="70" height="18"/>
-                    </g>
-                    <g transform="matrix(1.25714,0,0,1,-162.757,-895)">
-                        <rect x="701" y="1121" width="70" height="18"/>
-                    </g>
-                </g>
-            </g>
-        </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 949.74 1030.18">
+  <defs>
+    <style>
+      .cls-1 {
+        opacity: .11;
+      }
+
+      .cls-2 {
+        fill: url(#linear-gradient-2);
+      }
+
+      .cls-3 {
+        fill: url(#linear-gradient-4);
+      }
+
+      .cls-4 {
+        fill: url(#linear-gradient-3);
+      }
+
+      .cls-5 {
+        fill: url(#linear-gradient);
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="-13615.77" y1="233.82" x2="-12804.54" y2="233.82" gradientTransform="translate(-12666.03 1031.18) rotate(-180)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#bfbfbf"/>
+      <stop offset=".81" stop-color="#fff"/>
+      <stop offset=".97" stop-color="#eaeaea"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-2" x1="-12052.78" y1="342.64" x2="-12357.77" y2="824.65" gradientTransform="translate(-11656.66 1031.18) rotate(-180)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#bfbfbf"/>
+      <stop offset=".16" stop-color="#cfcfcf"/>
+      <stop offset=".47" stop-color="#e9e9e9"/>
+      <stop offset=".75" stop-color="#f9f9f9"/>
+      <stop offset=".97" stop-color="#fff"/>
+    </linearGradient>
+    <linearGradient id="linear-gradient-3" x1="-778.53" y1="619.82" x2="32.69" y2="619.82" gradientTransform="translate(778.53 1031.18) scale(1 -1)" xlink:href="#linear-gradient"/>
+    <linearGradient id="linear-gradient-4" x1="784.46" y1="728.65" x2="479.47" y2="1210.66" gradientTransform="translate(-230.84 1031.18) scale(1 -1)" xlink:href="#linear-gradient-2"/>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g class="cls-1">
+      <path class="cls-5" d="M480.32,659.05l-11.5-4.69-199.99-83.62s-3.96-1.58-4.2-6.21v178.57c0,2.31,1.4,4.38,3.53,5.3l681.58,281.78v-179.48l-469.42-191.65h0Z"/>
+      <path class="cls-2" d="M264.62,564.39v.12c.06,2.49,1.46,4.99,4.2,6.21l199.99,83.62,216.36-88.61v-179.72l-416.35,172.11c-.06,0-.12.06-.18.06-.12.06-.18.12-.24.12-.24.12-.79.43-1.4.91l-.73.73c-.24.24-.49.61-.73.97-.12.18-.24.43-.3.67-.18.36-.37.79-.42,1.22-.12.49-.18.97-.18,1.58h-.02Z"/>
+      <path class="cls-4" d="M0,464.7v179.48l681.58-281.78c2.13-.91,3.53-2.98,3.53-5.3v-178.57c-.24,4.63-4.2,6.21-4.2,6.21l-199.99,83.62-11.5,4.69L0,464.7Z"/>
+      <path class="cls-3" d="M685.12,178.38v.12c-.06,2.49-1.46,4.99-4.2,6.21l-199.99,83.62-216.36-88.61V0l416.35,172.11c.06,0,.12.06.18.06.12.06.18.12.24.12.24.12.79.43,1.4.91l.73.73c.24.24.49.61.73.97.12.18.24.43.3.67.18.36.37.79.42,1.22.12.49.18.97.18,1.58h.02Z"/>
     </g>
+  </g>
 </svg>

@@ -4,7 +4,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { Event } from '../../../../base/common/event.js';
 import { IDisposable } from '../../../../base/common/lifecycle.js';
 import { createDecorator } from '../../../../platform/instantiation/common/instantiation.js';
 
@@ -24,16 +23,14 @@ export interface AiSettingsSearchResult {
 
 export interface AiSettingsSearchProviderOptions {
 	limit: number;
-	embeddingsOnly: boolean;
 }
 
 export interface IAiSettingsSearchService {
 	readonly _serviceBrand: undefined;
-	readonly onProviderRegistered: Event<void>;
 
 	// Called from the Settings editor
 	isEnabled(): boolean;
-	startSearch(query: string, embeddingsOnly: boolean, token: CancellationToken): void;
+	startSearch(query: string, token: CancellationToken): void;
 	getEmbeddingsResults(query: string, token: CancellationToken): Promise<string[] | null>;
 	getLLMRankedResults(query: string, token: CancellationToken): Promise<string[] | null>;
 

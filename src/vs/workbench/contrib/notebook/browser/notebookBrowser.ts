@@ -800,7 +800,6 @@ export interface INotebookEditor {
 	hideProgress(): void;
 
 	getAbsoluteTopOfElement(cell: ICellViewModel): number;
-	getAbsoluteBottomOfElement(cell: ICellViewModel): number;
 	getHeightOfElement(cell: ICellViewModel): number;
 }
 

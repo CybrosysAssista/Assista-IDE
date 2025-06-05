@@ -40,20 +40,6 @@ import { stringValue } from '../../../../base/browser/cssValue.js';
 import { observableConfigValue } from '../../../../platform/observable/common/platformObservableUtils.js';
 import { Emitter } from '../../../../base/common/event.js';
 import { ChatAgentLocation } from '../../chat/common/constants.js';
-import { INSTRUCTIONS_LANGUAGE_ID, PROMPT_LANGUAGE_ID } from '../../chat/common/promptSyntax/constants.js';
-import { MODE_FILE_EXTENSION } from '../../../../platform/prompts/common/prompts.js';
-
-/**
- * Set of language IDs where inline chat hints should not be shown.
- */
-const IGNORED_LANGUAGE_IDS = new Set([
-	PLAINTEXT_LANGUAGE_ID,
-	'markdown',
-	'search-result',
-	INSTRUCTIONS_LANGUAGE_ID,
-	PROMPT_LANGUAGE_ID,
-	MODE_FILE_EXTENSION
-]);
 
 export const CTX_INLINE_CHAT_SHOWING_HINT = new RawContextKey<boolean>('inlineChatShowingHint', false, localize('inlineChatShowingHint', "Whether inline chat shows a contextual hint"));
 
@@ -251,9 +237,10 @@ export class InlineChatHintsController extends Disposable implements IEditorCont
 				return undefined;
 			}
 
-			if (IGNORED_LANGUAGE_IDS.has(model.getLanguageId())) {
+			if (model.getLanguageId() === PLAINTEXT_LANGUAGE_ID || model.getLanguageId() === 'markdown' || model.getLanguageId() === 'search-result') {
 				return undefined;
 			}
+
 
 			// DEBT - I cannot use `model.onDidChangeContent` directly here
 			// https://github.com/microsoft/vscode/issues/242059

@@ -61,8 +61,8 @@ function getModelPickerActionBarActions(menuService: IMenuService, contextKeySer
 		additionalActions.push(...menuContributions);
 	}
 
-	// Add upgrade option if entitlement is free
-	if (chatEntitlementService.entitlement === ChatEntitlement.Free) {
+	// Add upgrade option if entitlement is limited
+	if (chatEntitlementService.entitlement === ChatEntitlement.Limited) {
 		additionalActions.push({
 			id: 'moreModels',
 			label: localize('chat.moreModels', "Add Premium Models"),
@@ -119,8 +119,8 @@ export class ModelPickerActionItem extends ActionWidgetDropdownActionViewItem {
 	}
 
 	protected override renderLabel(element: HTMLElement): IDisposable | null {
-		dom.reset(element, dom.$('span.chat-model-label', undefined, this.currentModel.metadata.name), ...renderLabelWithIcons(`$(chevron-down)`));
 		this.setAriaLabelAttributes(element);
+		dom.reset(element, dom.$('span.chat-model-label', undefined, this.currentModel.metadata.name), ...renderLabelWithIcons(`$(chevron-down)`));
 		return null;
 	}
 

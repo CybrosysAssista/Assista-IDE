@@ -16,7 +16,7 @@ const searchParams = new URL(location.toString()).searchParams;
 
 const remoteAuthority = searchParams.get('remoteAuthority');
 
-let outerIframeMessagePort: MessagePort | undefined;
+const ID = searchParams.get('id');
 
 /**
  * Origin used for resources
@@ -103,7 +103,6 @@ sw.addEventListener('message', async (event: ExtendableMessageEvent) => {
 	const source = event.source as Client;
 	switch (event.data.channel) {
 		case 'version': {
-			outerIframeMessagePort = event.ports[0];
 			sw.clients.get(source.id).then(client => {
 				if (client) {
 					client.postMessage({
@@ -203,24 +202,21 @@ async function processResourceRequest(
 	event: FetchEvent,
 	requestUrlComponents: ResourceRequestUrlComponents
 ): Promise<Response> {
-	let client = await sw.clients.get(event.clientId);
+	const client = await sw.clients.get(event.clientId);
+	let webviewId: string | null | undefined;
 	if (!client) {
-		client = await getWorkerClientForId(event.clientId);
-		if (!client) {
+		const workerClient = await getWorkerClientForId(event.clientId);
+		if (!workerClient) {
 			console.error('Could not find inner client for request');
 			return notFound();
+		} else {
+			webviewId = getWebviewIdForClient(workerClient);
 		}
+	} else {
+		webviewId = getWebviewIdForClient(client);
 	}
 
-	const webviewId = getWebviewIdForClient(client);
-
-	// Refs https://github.com/microsoft/vscode/issues/244143
-	// With PlzDedicatedWorker, worker subresources and blob wokers
-	// will use clients different from the window client.
-	// Since we cannot different a worker main resource from a worker subresource
-	// we will use message channel to the outer iframe provided at the time
-	// of service worker controller version initialization.
-	if (!webviewId && client.type !== 'worker' && client.type !== 'sharedworker') {
+	if (!webviewId) {
 		console.error('Could not resolve webview id');
 		return notFound();
 	}
@@ -312,7 +308,7 @@ async function processResourceRequest(
 			headers['Cross-Origin-Opener-Policy'] = 'same-origin';
 		}
 
-		const response = new Response(entry.data as Uint8Array<ArrayBuffer>, {
+		const response = new Response(entry.data, {
 			status: 200,
 			headers
 		});
@@ -325,6 +321,12 @@ async function processResourceRequest(
 		return response.clone();
 	};
 
+	const parentClients = await getOuterIframeClient(webviewId);
+	if (!parentClients.length) {
+		console.log('Could not find parent client for request');
+		return notFound();
+	}
+
 	let cached: Response | undefined;
 	if (shouldTryCaching) {
 		const cache = await caches.open(resourceCacheName);
@@ -333,26 +335,8 @@ async function processResourceRequest(
 
 	const { requestId, promise } = resourceRequestStore.create();
 
-	if (webviewId) {
-		const parentClients = await getOuterIframeClient(webviewId);
-		if (!parentClients.length) {
-			console.log('Could not find parent client for request');
-			return notFound();
-		}
-
-		for (const parentClient of parentClients) {
-			parentClient.postMessage({
-				channel: 'load-resource',
-				id: requestId,
-				scheme: requestUrlComponents.scheme,
-				authority: requestUrlComponents.authority,
-				path: requestUrlComponents.path,
-				query: requestUrlComponents.query,
-				ifNoneMatch: cached?.headers.get('ETag'),
-			});
-		}
-	} else if (client.type === 'worker' || client.type === 'sharedworker') {
-		outerIframeMessagePort?.postMessage({
+	for (const parentClient of parentClients) {
+		parentClient.postMessage({
 			channel: 'load-resource',
 			id: requestId,
 			scheme: requestUrlComponents.scheme,
@@ -377,13 +361,7 @@ async function processLocalhostRequest(
 		return fetch(event.request);
 	}
 	const webviewId = getWebviewIdForClient(client);
-	// Refs https://github.com/microsoft/vscode/issues/244143
-	// With PlzDedicatedWorker, worker subresources and blob wokers
-	// will use clients different from the window client.
-	// Since we cannot different a worker main resource from a worker subresource
-	// we will use message channel to the outer iframe provided at the time
-	// of service worker controller version initialization.
-	if (!webviewId && client.type !== 'worker' && client.type !== 'sharedworker') {
+	if (!webviewId) {
 		console.error('Could not resolve webview id');
 		return fetch(event.request);
 	}
@@ -407,22 +385,15 @@ async function processLocalhostRequest(
 		});
 	};
 
+	const parentClients = await getOuterIframeClient(webviewId);
+	if (!parentClients.length) {
+		console.log('Could not find parent client for request');
+		return notFound();
+	}
+
 	const { requestId, promise } = localhostRequestStore.create();
-	if (webviewId) {
-		const parentClients = await getOuterIframeClient(webviewId);
-		if (!parentClients.length) {
-			console.log('Could not find parent client for request');
-			return notFound();
-		}
-		for (const parentClient of parentClients) {
-			parentClient.postMessage({
-				channel: 'load-localhost',
-				origin: origin,
-				id: requestId,
-			});
-		}
-	} else if (client.type === 'worker' || client.type === 'sharedworker') {
-		outerIframeMessagePort?.postMessage({
+	for (const parentClient of parentClients) {
+		parentClient.postMessage({
 			channel: 'load-localhost',
 			origin: origin,
 			id: requestId,
@@ -433,6 +404,15 @@ async function processLocalhostRequest(
 }
 
 function getWebviewIdForClient(client: Client): string | null {
+	// Refs https://github.com/microsoft/vscode/issues/244143
+	// With PlzDedicatedWorker, worker subresources and blob wokers
+	// will use clients different from the window client.
+	// Since we cannot different a worker main resource from a worker subresource
+	// we will use the global webview ID passed in at the time of
+	// service worker registration.
+	if (client.type === 'worker' || client.type === 'sharedworker') {
+		return ID;
+	}
 	const requesterClientUrl = new URL(client.url);
 	return requesterClientUrl.searchParams.get('id');
 }

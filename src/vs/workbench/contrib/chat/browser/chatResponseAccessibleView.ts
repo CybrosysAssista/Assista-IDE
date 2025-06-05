@@ -72,17 +72,10 @@ class ChatResponseAccessibleProvider extends Disposable implements IAccessibleVi
 				if (toolInvocation.confirmationMessages) {
 					const title = toolInvocation.confirmationMessages.title;
 					const message = typeof toolInvocation.confirmationMessages.message === 'string' ? toolInvocation.confirmationMessages.message : stripIcons(renderMarkdownAsPlaintext(toolInvocation.confirmationMessages.message));
-					let input = '';
-					if (toolInvocation.toolSpecificData) {
-						input = toolInvocation.toolSpecificData?.kind === 'terminal'
-							? toolInvocation.toolSpecificData.command
-							: input = toolInvocation.toolSpecificData?.kind === 'extensions'
-								? JSON.stringify(toolInvocation.toolSpecificData.extensions)
-								: JSON.stringify(toolInvocation.toolSpecificData.rawInput);
-					}
+					const command = toolInvocation.toolSpecificData && 'command' in toolInvocation.toolSpecificData ? toolInvocation.toolSpecificData.command : undefined;
 					responseContent += `${title}`;
-					if (input) {
-						responseContent += `: ${input}`;
+					if (command) {
+						responseContent += `: ${command}`;
 					}
 					responseContent += `\n${message}\n`;
 				} else if (toolInvocation.isComplete && toolInvocation.resultDetails && 'input' in toolInvocation.resultDetails) {

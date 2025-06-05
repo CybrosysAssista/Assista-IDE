@@ -174,7 +174,7 @@ export class Extension implements IExtension {
 		if (this.resourceExtension) {
 			return this.resourceExtension.identifier;
 		}
-		return this.local?.identifier ?? { id: '' };
+		return this.local!.identifier;
 	}
 
 	get uuid(): string | undefined {
@@ -236,33 +236,37 @@ export class Extension implements IExtension {
 		return this.gallery?.detailsLink;
 	}
 
-	get iconUrl(): string | undefined {
+	get iconUrl(): string {
 		return this.galleryIconUrl || this.resourceExtensionIconUrl || this.localIconUrl || this.defaultIconUrl;
 	}
 
-	get iconUrlFallback(): string | undefined {
-		return this.gallery?.assets.icon?.fallbackUri ?? DefaultIconPath;
+	get iconUrlFallback(): string {
+		return this.galleryIconUrlFallback || this.resourceExtensionIconUrl || this.localIconUrl || this.defaultIconUrl;
 	}
 
-	private get localIconUrl(): string | undefined {
+	private get localIconUrl(): string | null {
 		if (this.local && this.local.manifest.icon) {
 			return FileAccess.uriToBrowserUri(resources.joinPath(this.local.location, this.local.manifest.icon)).toString(true);
 		}
-		return undefined;
+		return null;
 	}
 
-	private get resourceExtensionIconUrl(): string | undefined {
+	private get resourceExtensionIconUrl(): string | null {
 		if (this.resourceExtension?.manifest.icon) {
 			return FileAccess.uriToBrowserUri(resources.joinPath(this.resourceExtension.location, this.resourceExtension.manifest.icon)).toString(true);
 		}
-		return undefined;
+		return null;
 	}
 
-	private get galleryIconUrl(): string | undefined {
-		return this.gallery?.assets.icon?.uri;
+	private get galleryIconUrl(): string | null {
+		return this.gallery?.assets.icon ? this.gallery.assets.icon.uri : null;
 	}
 
-	private get defaultIconUrl(): string | undefined {
+	private get galleryIconUrlFallback(): string | null {
+		return this.gallery?.assets.icon ? this.gallery.assets.icon.fallbackUri : null;
+	}
+
+	private get defaultIconUrl(): string {
 		if (this.type === ExtensionType.System && this.local) {
 			if (this.local.manifest && this.local.manifest.contributes) {
 				if (Array.isArray(this.local.manifest.contributes.themes) && this.local.manifest.contributes.themes.length) {
@@ -2100,7 +2104,7 @@ export class ExtensionsWorkbenchService extends Disposable implements IExtension
 		}
 
 		if (autoUpdateValue === 'onlyEnabledExtensions') {
-			return extension.enablementState !== EnablementState.DisabledGlobally && extension.enablementState !== EnablementState.DisabledWorkspace;
+			return this.extensionEnablementService.isEnabledEnablementState(extension.enablementState);
 		}
 
 		return false;

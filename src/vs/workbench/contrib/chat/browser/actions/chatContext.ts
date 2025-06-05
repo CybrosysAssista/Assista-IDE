@@ -23,8 +23,8 @@ import { FileEditorInput } from '../../../files/browser/editors/fileEditorInput.
 import { NotebookEditorInput } from '../../../notebook/common/notebookEditorInput.js';
 import { IChatContextPickService, IChatContextValueItem, IChatContextPickerItem, IChatContextPickerPickItem } from '../chatContextPickService.js';
 import { IChatEditingService } from '../../common/chatEditingService.js';
-import { IChatRequestToolEntry, IChatRequestToolSetEntry, IChatRequestVariableEntry, IImageVariableEntry, OmittedState } from '../../common/chatModel.js';
-import { ToolDataSource, ToolSet } from '../../common/languageModelToolsService.js';
+import { IChatRequestToolEntry, IChatRequestVariableEntry, IImageVariableEntry, OmittedState } from '../../common/chatModel.js';
+import { IToolData } from '../../common/languageModelToolsService.js';
 import { IChatWidget } from '../chat.js';
 import { imageToHash, isImage } from '../chatPasteProviders.js';
 import { convertBufferToScreenshotVariable } from '../contrib/screenshot.js';
@@ -70,49 +70,33 @@ class ToolsContextPickerPick implements IChatContextPickerItem {
 		readonly picks: Promise<(IChatContextPickerPickItem | IQuickPickSeparator)[]>;
 	} {
 
-		type Pick = IChatContextPickerPickItem & { toolInfo: { ordinal: number; label: string } };
+		type Pick = IChatContextPickerPickItem & { ordinal: number; groupLabel: string };
 		const items: Pick[] = [];
 
-		for (const entry of widget.input.selectedToolsModel.entries.get()) {
-
-			if (entry instanceof ToolSet) {
-				items.push({
-					toolInfo: ToolDataSource.classify(entry.source),
-					label: entry.toolReferenceName,
-					description: entry.description,
-					asAttachment: (): IChatRequestToolSetEntry => {
-						return {
-							kind: 'toolset',
-							id: entry.id,
-							icon: entry.icon,
-							name: entry.displayName,
-							value: undefined,
-						};
-					}
-				});
-			} else {
-				items.push({
-					toolInfo: ToolDataSource.classify(entry.source),
-					label: entry.toolReferenceName ?? entry.displayName,
-					description: entry.userDescription ?? entry.modelDescription,
-					asAttachment: (): IChatRequestToolEntry => {
-						return {
-							kind: 'tool',
-							id: entry.id,
-							icon: ThemeIcon.isThemeIcon(entry.icon) ? entry.icon : undefined,
-							name: entry.displayName,
-							value: undefined,
-						};
-					}
-				});
+		for (const tool of widget.input.selectedToolsModel.tools.get()) {
+			if (!tool.canBeReferencedInPrompt) {
+				continue;
 			}
+			const item: Pick = {
+				...this._classify(tool),
+				label: tool.toolReferenceName ?? tool.id,
+				description: (tool.toolReferenceName ?? tool.id) !== tool.displayName ? tool.displayName : undefined,
+				asAttachment: (): IChatRequestToolEntry => {
+					return {
+						kind: 'tool',
+						id: tool.id,
+						name: tool.displayName,
+						fullName: tool.displayName,
+						value: undefined,
+					};
+				}
+			};
+
+			items.push(item);
 		}
 
 		items.sort((a, b) => {
-			let res = a.toolInfo.ordinal - b.toolInfo.ordinal;
-			if (res === 0) {
-				res = a.toolInfo.label.localeCompare(b.toolInfo.label);
-			}
+			let res = a.ordinal - b.ordinal;
 			if (res === 0) {
 				res = a.label.localeCompare(b.label);
 			}
@@ -122,10 +106,11 @@ class ToolsContextPickerPick implements IChatContextPickerItem {
 		let lastGroupLabel: string | undefined;
 		const picks: (IQuickPickSeparator | Pick)[] = [];
 
+
 		for (const item of items) {
-			if (lastGroupLabel !== item.toolInfo.label) {
-				picks.push({ type: 'separator', label: item.toolInfo.label });
-				lastGroupLabel = item.toolInfo.label;
+			if (lastGroupLabel !== item.groupLabel) {
+				picks.push({ type: 'separator', label: item.groupLabel });
+				lastGroupLabel = item.groupLabel;
 			}
 			picks.push(item);
 		}
@@ -134,6 +119,17 @@ class ToolsContextPickerPick implements IChatContextPickerItem {
 			placeholder: localize('chatContext.tools.placeholder', 'Select a tool'),
 			picks: Promise.resolve(picks)
 		};
+
+	}
+
+	private _classify(tool: IToolData) {
+		if (tool.source.type === 'internal' || tool.source.type === 'extension' && !tool.source.isExternalTool) {
+			return { ordinal: 1, groupLabel: localize('chatContext.tools.internal', 'Built-In') };
+		} else if (tool.source.type === 'mcp') {
+			return { ordinal: 2, groupLabel: localize('chatContext.tools.mcp', 'MCP Servers') };
+		} else {
+			return { ordinal: 3, groupLabel: localize('chatContext.tools.extension', 'Extensions') };
+		}
 	}
 }
 

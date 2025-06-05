@@ -13,7 +13,7 @@ import { ILabelService } from '../../../../platform/label/common/label.js';
 import { IWorkbenchContribution } from '../../../common/contributions.js';
 import { getExcludes, IFileQuery, ISearchComplete, ISearchConfiguration, ISearchService, QueryType, VIEW_ID } from '../../../services/search/common/search.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
-import { IChatContextPickerItem, IChatContextPickerPickItem, IChatContextPickService, IChatContextValueItem, picksWithPromiseFn } from '../../chat/browser/chatContextPickService.js';
+import { IChatContextPickerItem, IChatContextPickerPickItem, IChatContextPickService, IChatContextValueItem } from '../../chat/browser/chatContextPickService.js';
 import { IChatRequestVariableEntry, ISymbolVariableEntry } from '../../chat/common/chatModel.js';
 import { SearchContext } from '../common/constants.js';
 import { SearchView } from './searchView.js';
@@ -99,11 +99,14 @@ class SymbolsContextPickerPick implements IChatContextPickerItem {
 		this._provider?.dispose();
 	}
 
-	asPicker() {
+	asPicker(): {
+		readonly placeholder: string;
+		readonly picks: (query: string, token: CancellationToken) => Promise<IChatContextPickerPickItem[]>;
+	} {
 
 		return {
 			placeholder: localize('select.symb', "Select a symbol"),
-			picks: picksWithPromiseFn((query: string, token: CancellationToken) => {
+			picks: async (query: string, token: CancellationToken) => {
 
 				this._provider ??= this._instantiationService.createInstance(SymbolsQuickAccessProvider);
 
@@ -134,7 +137,7 @@ class SymbolsContextPickerPick implements IChatContextPickerItem {
 					}
 					return result;
 				});
-			}),
+			}
 		};
 	}
 }
@@ -157,11 +160,14 @@ class FilesAndFoldersPickerPick implements IChatContextPickerItem {
 		@IHistoryService private readonly _historyService: IHistoryService,
 	) { }
 
-	asPicker() {
+	asPicker(): {
+		readonly placeholder: string;
+		readonly picks: (query: string, token: CancellationToken) => Promise<IChatContextPickerPickItem[]>;
+	} {
 
 		return {
 			placeholder: localize('chatContext.attach.files.placeholder', "Search file or folder by name"),
-			picks: picksWithPromiseFn(async (value, token) => {
+			picks: async (value, token) => {
 
 				const workspaces = this._workspaceService.getWorkspace().folders.map(folder => folder.uri);
 
@@ -197,7 +203,7 @@ class FilesAndFoldersPickerPick implements IChatContextPickerItem {
 				result.sort((a, b) => compare(a.label, b.label));
 
 				return result;
-			}),
+			},
 		};
 	}
 

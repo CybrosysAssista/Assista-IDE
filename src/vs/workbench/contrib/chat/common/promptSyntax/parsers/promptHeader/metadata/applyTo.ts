@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PromptStringMetadata } from './base/string.js';
+import { PromptStringMetadata } from './record.js';
 import { localize } from '../../../../../../../../nls.js';
 import { INSTRUCTIONS_LANGUAGE_ID } from '../../../constants.js';
 import { isEmptyPattern, parse } from '../../../../../../../../base/common/glob.js';
@@ -30,18 +30,20 @@ export class PromptApplyToMetadata extends PromptStringMetadata {
 		return RECORD_NAME;
 	}
 
-	public override validate(): readonly PromptMetadataDiagnostic[] {
-		super.validate();
+	protected override validate(): readonly PromptMetadataDiagnostic[] {
+		const result: PromptMetadataDiagnostic[] = [
+			...super.validate(),
+		];
 
 		// if we don't have a value token, validation must
 		// has failed already so nothing to do more
 		if (this.valueToken === undefined) {
-			return this.issues;
+			return result;
 		}
 
 		// the applyTo metadata makes sense only for 'instruction' prompts
 		if (this.languageId !== INSTRUCTIONS_LANGUAGE_ID) {
-			this.issues.push(
+			result.push(
 				new PromptMetadataError(
 					this.range,
 					localize(
@@ -53,14 +55,14 @@ export class PromptApplyToMetadata extends PromptStringMetadata {
 			);
 
 			delete this.valueToken;
-			return this.issues;
+			return result;
 		}
 
 		const { cleanText } = this.valueToken;
 
 		// warn user if specified glob pattern is not valid
 		if (this.isValidGlob(cleanText) === false) {
-			this.issues.push(
+			result.push(
 				new PromptMetadataWarning(
 					this.valueToken.range,
 					localize(
@@ -72,10 +74,10 @@ export class PromptApplyToMetadata extends PromptStringMetadata {
 			);
 
 			delete this.valueToken;
-			return this.issues;
+			return result;
 		}
 
-		return this.issues;
+		return result;
 	}
 
 	/**

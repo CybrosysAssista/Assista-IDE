@@ -28,7 +28,7 @@ import { TokenArray } from '../../../../../../common/tokens/tokenArray.js';
 import { InlineDecoration, InlineDecorationType } from '../../../../../../common/viewModel.js';
 import { IInlineEditsView, InlineEditTabAction } from '../inlineEditsViewInterface.js';
 import { getEditorBlendedColor, getModifiedBorderColor, getOriginalBorderColor, modifiedChangedLineBackgroundColor, originalBackgroundColor } from '../theme.js';
-import { getEditorValidOverlayRect, getPrefixTrim, mapOutFalsy, rectToProps } from '../utils/utils.js';
+import { getPrefixTrim, mapOutFalsy, rectToProps } from '../utils/utils.js';
 
 export class InlineEditsLineReplacementView extends Disposable implements IInlineEditsView {
 
@@ -204,6 +204,8 @@ export class InlineEditsLineReplacementView extends Disposable implements IInlin
 
 				const layoutProps = layout.read(reader);
 				const contentLeft = this._editor.layoutInfoContentLeft.read(reader);
+				const contentWidth = this._editor.contentWidth.read(reader);
+				const contentHeight = this._editor.editor.getContentHeight();
 
 				const lineHeight = this._editor.getOption(EditorOption.lineHeight).read(reader);
 				modifiedLineElements.lines.forEach(l => {
@@ -219,7 +221,10 @@ export class InlineEditsLineReplacementView extends Disposable implements IInlin
 					n.div({
 						style: {
 							position: 'absolute',
-							...rectToProps((r) => getEditorValidOverlayRect(this._editor).read(r)),
+							top: 0,
+							left: contentLeft,
+							width: contentWidth,
+							height: contentHeight,
 							overflow: 'hidden',
 							pointerEvents: 'none',
 						}

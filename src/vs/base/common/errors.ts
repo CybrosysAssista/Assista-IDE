@@ -192,7 +192,7 @@ export interface V8CallSite {
 	toString(): string;
 }
 
-export const canceledName = 'Canceled';
+const canceledName = 'Canceled';
 
 /**
  * Checks if the given error is a promise in canceled state

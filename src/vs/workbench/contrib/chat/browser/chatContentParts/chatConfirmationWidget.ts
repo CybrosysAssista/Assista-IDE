@@ -24,8 +24,6 @@ export interface IChatConfirmationButton {
 	isSecondary?: boolean;
 	tooltip?: string;
 	data: any;
-	disabled?: boolean;
-	onDidChangeDisablement?: Event<boolean>;
 	moreActions?: IChatConfirmationButton[];
 }
 
@@ -111,7 +109,7 @@ abstract class BaseChatConfirmationWidget extends Disposable {
 	protected readonly markdownRenderer: MarkdownRenderer;
 
 	constructor(
-		title: string | IMarkdownString,
+		title: string,
 		subtitle: string | IMarkdownString | undefined,
 		buttons: IChatConfirmationButton[],
 		@IInstantiationService protected readonly instantiationService: IInstantiationService,
@@ -124,7 +122,7 @@ abstract class BaseChatConfirmationWidget extends Disposable {
 		const elements = dom.h('.chat-confirmation-widget@root', [
 			dom.h('.chat-confirmation-widget-title@title'),
 			dom.h('.chat-confirmation-widget-message@message'),
-			dom.h('.chat-buttons-container@buttonsContainer'),
+			dom.h('.chat-confirmation-buttons-container@buttonsContainer'),
 		]);
 		this._domNode = elements.root;
 		this.markdownRenderer = this.instantiationService.createInstance(MarkdownRenderer, {});
@@ -141,7 +139,7 @@ abstract class BaseChatConfirmationWidget extends Disposable {
 
 		this.messageElement = elements.message;
 		buttons.forEach(buttonData => {
-			const buttonOptions: IButtonOptions = { ...defaultButtonStyles, secondary: buttonData.isSecondary, title: buttonData.tooltip, disabled: buttonData.disabled };
+			const buttonOptions: IButtonOptions = { ...defaultButtonStyles, secondary: buttonData.isSecondary, title: buttonData.tooltip };
 
 			let button: IButton;
 			if (buttonData.moreActions) {
@@ -153,7 +151,7 @@ abstract class BaseChatConfirmationWidget extends Disposable {
 						action.label,
 						action.label,
 						undefined,
-						!action.disabled,
+						true,
 						() => {
 							this._onDidClick.fire(action);
 							return Promise.resolve();
@@ -167,9 +165,6 @@ abstract class BaseChatConfirmationWidget extends Disposable {
 			this._register(button);
 			button.label = buttonData.label;
 			this._register(button.onDidClick(() => this._onDidClick.fire(buttonData)));
-			if (buttonData.onDidChangeDisablement) {
-				this._register(buttonData.onDidChangeDisablement(disabled => button.enabled = !disabled));
-			}
 		});
 	}
 
@@ -187,7 +182,7 @@ abstract class BaseChatConfirmationWidget extends Disposable {
 
 export class ChatConfirmationWidget extends BaseChatConfirmationWidget {
 	constructor(
-		title: string | IMarkdownString,
+		title: string,
 		subtitle: string | IMarkdownString | undefined,
 		private readonly message: string | IMarkdownString,
 		buttons: IChatConfirmationButton[],
@@ -209,7 +204,7 @@ export class ChatConfirmationWidget extends BaseChatConfirmationWidget {
 
 export class ChatCustomConfirmationWidget extends BaseChatConfirmationWidget {
 	constructor(
-		title: string | IMarkdownString,
+		title: string,
 		subtitle: string | IMarkdownString | undefined,
 		messageElement: HTMLElement,
 		buttons: IChatConfirmationButton[],

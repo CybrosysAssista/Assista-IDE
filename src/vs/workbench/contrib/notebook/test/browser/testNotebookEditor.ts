@@ -361,8 +361,7 @@ function _createTestNotebookEditor(instantiationService: TestInstantiationServic
 					wsmiddotWidth: 10,
 					maxDigitWidth: 10,
 				}, true),
-				stickyHeight: 0,
-				listViewOffsetTop: 0,
+				stickyHeight: 0
 			};
 		}
 	};

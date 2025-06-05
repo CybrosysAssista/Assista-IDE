@@ -71,7 +71,6 @@ export const ACTION_ID_NEW_EDIT_SESSION = `workbench.action.chat.newEditSession`
 export const CHAT_OPEN_ACTION_ID = 'workbench.action.chat.open';
 export const CHAT_SETUP_ACTION_ID = 'workbench.action.chat.triggerSetup';
 const TOGGLE_CHAT_ACTION_ID = 'workbench.action.chat.toggle';
-const CHAT_CLEAR_HISTORY_ACTION_ID = 'workbench.action.chat.clearHistory';
 
 export interface IChatViewOpenOptions {
 	/**
@@ -350,7 +349,6 @@ export function registerChatActions() {
 			const viewsService = accessor.get(IViewsService);
 			const editorService = accessor.get(IEditorService);
 			const dialogService = accessor.get(IDialogService);
-			const commandService = accessor.get(ICommandService);
 
 			const view = await viewsService.openView<ChatViewPane>(ChatViewId);
 			if (!view) {
@@ -371,11 +369,6 @@ export function registerChatActions() {
 			}
 
 			const showPicker = async () => {
-				const clearChatHistoryButton: IQuickInputButton = {
-					iconClass: ThemeIcon.asClassName(Codicon.clearAll),
-					tooltip: localize('interactiveSession.history.clear', "Clear All Workspace Chats"),
-				};
-
 				const openInEditorButton: IQuickInputButton = {
 					iconClass: ThemeIcon.asClassName(Codicon.file),
 					tooltip: localize('interactiveSession.history.editor', "Open in Editor"),
@@ -424,16 +417,9 @@ export function registerChatActions() {
 
 				const store = new DisposableStore();
 				const picker = store.add(quickInputService.createQuickPick<IChatPickerItem>({ useSeparators: true }));
-				picker.title = localize('interactiveSession.history.title', "Workspace Chat History");
 				picker.placeholder = localize('interactiveSession.history.pick', "Switch to chat");
-				picker.buttons = [clearChatHistoryButton];
 				const picks = await getPicks();
 				picker.items = picks;
-				store.add(picker.onDidTriggerButton(async button => {
-					if (button === clearChatHistoryButton) {
-						await commandService.executeCommand(CHAT_CLEAR_HISTORY_ACTION_ID);
-					}
-				}));
 				store.add(picker.onDidTriggerItemButton(async context => {
 					if (context.button === openInEditorButton) {
 						const options: IChatEditorOptions = { target: { sessionId: context.item.chat.sessionId }, pinned: true };
@@ -550,7 +536,7 @@ export function registerChatActions() {
 	registerAction2(class ClearChatHistoryAction extends Action2 {
 		constructor() {
 			super({
-				id: CHAT_CLEAR_HISTORY_ACTION_ID,
+				id: 'workbench.action.chat.clearHistory',
 				title: localize2('chat.clear.label', "Clear All Workspace Chats"),
 				precondition: ChatContextKeys.enabled,
 				category: CHAT_CATEGORY,
@@ -655,7 +641,7 @@ export function registerChatActions() {
 				f1: true,
 				precondition: ContextKeyExpr.and(
 					ContextKeyExpr.or(
-						ChatContextKeys.Entitlement.free,
+						ChatContextKeys.Entitlement.limited,
 						ChatContextKeys.Entitlement.pro,
 						ChatContextKeys.Entitlement.proPlus
 					),
@@ -750,8 +736,8 @@ export function registerChatActions() {
 				message = [message, localize('quotaResetDate', "The allowance will reset on {0}.", dateFormatter.value.format(quotaResetDate))].join(' ');
 			}
 
-			const free = chatEntitlementService.entitlement === ChatEntitlement.Free;
-			const upgradeToPro = free ? localize('upgradeToPro', "Upgrade to Copilot Pro (your first 30 days are free) for:\n- Unlimited code completions\n- Unlimited chat messages\n- Access to premium models") : undefined;
+			const limited = chatEntitlementService.entitlement === ChatEntitlement.Limited;
+			const upgradeToPro = limited ? localize('upgradeToPro', "Upgrade to Copilot Pro (your first 30 days are free) for:\n- Unlimited code completions\n- Unlimited chat messages\n- Access to premium models") : undefined;
 
 			await dialogService.prompt({
 				type: 'none',
@@ -762,7 +748,7 @@ export function registerChatActions() {
 				},
 				buttons: [
 					{
-						label: free ? localize('upgradePro', "Upgrade to Copilot Pro") : localize('upgradePlan', "Upgrade Copilot Plan"),
+						label: limited ? localize('upgradePro', "Upgrade to Copilot Pro") : localize('upgradePlan', "Upgrade Copilot Plan"),
 						run: () => {
 							const commandId = 'workbench.action.chat.upgradePlan';
 							telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: commandId, from: 'chat-dialog' });
@@ -895,7 +881,7 @@ export class CopilotTitleBarMenuRendering extends Disposable implements IWorkben
 			const chatSentiment = chatEntitlementService.sentiment;
 			const chatQuotaExceeded = chatEntitlementService.quotas.chat?.percentRemaining === 0;
 			const signedOut = chatEntitlementService.entitlement === ChatEntitlement.Unknown;
-			const free = chatEntitlementService.entitlement === ChatEntitlement.Free;
+			const limited = chatEntitlementService.entitlement === ChatEntitlement.Limited;
 
 			let primaryActionId = TOGGLE_CHAT_ACTION_ID;
 			let primaryActionTitle = localize('toggleChat', "Toggle Chat");
@@ -905,7 +891,7 @@ export class CopilotTitleBarMenuRendering extends Disposable implements IWorkben
 					primaryActionId = CHAT_SETUP_ACTION_ID;
 					primaryActionTitle = localize('signInToChatSetup', "Sign in to use Copilot...");
 					primaryActionIcon = Codicon.copilotNotConnected;
-				} else if (chatQuotaExceeded && free) {
+				} else if (chatQuotaExceeded && limited) {
 					primaryActionId = OPEN_CHAT_QUOTA_EXCEEDED_DIALOG;
 					primaryActionTitle = localize('chatQuotaExceededButton', "Copilot Free plan chat messages quota reached. Click for details.");
 					primaryActionIcon = Codicon.copilotWarning;

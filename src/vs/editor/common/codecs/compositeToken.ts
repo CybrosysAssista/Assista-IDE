@@ -7,22 +7,14 @@ import { BaseToken } from './baseToken.js';
 
 /**
  * Composite token consists of a list of other tokens.
- * Composite token consists of a list of other tokens.
  */
 export abstract class CompositeToken<
 	TTokens extends readonly BaseToken[],
 > extends BaseToken {
-	/**
-	 * Reference to the list of child tokens.
-	 */
-	protected readonly childTokens: [...TTokens];
-
 	constructor(
-		tokens: TTokens,
+		protected readonly childTokens: TTokens,
 	) {
-		super(BaseToken.fullRange(tokens));
-
-		this.childTokens = [...tokens];
+		super(BaseToken.fullRange(childTokens));
 	}
 
 	public override get text(): string {
@@ -32,7 +24,7 @@ export abstract class CompositeToken<
 	/**
 	 * Tokens that this composite token consists of.
 	 */
-	public get children(): TTokens {
+	public get tokens(): TTokens {
 		return this.childTokens;
 	}
 
@@ -45,13 +37,13 @@ export abstract class CompositeToken<
 			return false;
 		}
 
-		if (this.children.length !== other.children.length) {
+		if (this.tokens.length !== other.tokens.length) {
 			return false;
 		}
 
-		for (let i = 0; i < this.children.length; i++) {
-			const childToken = this.children[i];
-			const otherChildToken = other.children[i];
+		for (let i = 0; i < this.tokens.length; i++) {
+			const childToken = this.tokens[i];
+			const otherChildToken = other.tokens[i];
 
 			if (childToken.equals(otherChildToken) === false) {
 				return false;

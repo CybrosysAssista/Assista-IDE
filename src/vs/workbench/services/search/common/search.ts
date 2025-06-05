@@ -238,14 +238,10 @@ export interface IProgressMessage {
 	message: string;
 }
 
-export type ISearchProgressItem = IFileMatch | IProgressMessage | AISearchKeyword;
+export type ISearchProgressItem = IFileMatch | IProgressMessage;
 
 export function isFileMatch(p: ISearchProgressItem): p is IFileMatch {
 	return !!(<IFileMatch>p).resource;
-}
-
-export function isAIKeyword(p: ISearchProgressItem): p is AISearchKeyword {
-	return !!(<AISearchKeyword>p).keyword;
 }
 
 export function isProgressMessage(p: ISearchProgressItem | ISerializedSearchProgressItem): p is IProgressMessage {
@@ -420,12 +416,6 @@ export const enum SearchSortOrder {
 	CountAscending = 'countAscending'
 }
 
-export const enum SemanticSearchBehavior {
-	Auto = 'auto',
-	Manual = 'manual',
-	RunOnEmpty = 'runOnEmpty',
-}
-
 export interface ISearchConfigurationProperties {
 	exclude: glob.IExpression;
 	useRipgrep: boolean;
@@ -470,10 +460,7 @@ export interface ISearchConfigurationProperties {
 	defaultViewMode: ViewMode;
 	experimental: {
 		closedNotebookRichContentResults: boolean;
-	};
-	searchView: {
-		semanticSearchBehavior: string;
-		keywordSuggestions: boolean;
+		autoAISearchResults: boolean;
 	};
 }
 

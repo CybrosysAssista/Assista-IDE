@@ -11,7 +11,6 @@ import { assertDefined } from '../../../../base/common/types.js';
 import { Disposable } from '../../../../base/common/lifecycle.js';
 import { WriteableStream } from '../../../../base/common/stream.js';
 import { BaseDecoder } from '../../../../base/common/codecs/baseDecoder.js';
-import { SimpleToken } from '../../../common/codecs/simpleCodec/tokens/simpleToken.js';
 
 /**
  * Kind of decoder tokens consume methods are different ways
@@ -220,17 +219,9 @@ export class TestDecoder<T extends BaseToken, D extends BaseDecoder<T>> extends 
 				`Expected token '${i}' to be '${expectedToken}', got 'undefined'.`,
 			);
 
-			const expectedTokenString = (expectedToken instanceof SimpleToken)
-				? `${expectedToken} `
-				: `\n  "${expectedToken.text}"(${expectedToken.range})\n`;
-
-			const receivedTokenString = (receivedToken instanceof SimpleToken)
-				? receivedToken.toString()
-				: `\n  "${receivedToken.text}"(${receivedToken.range})\n`;
-
 			assert(
 				receivedToken.equals(expectedToken),
-				`Expected token '${i}' to be: ${expectedTokenString}got: ${receivedTokenString}`,
+				`\nExpected token '${i}' to be:\n\n${expectedToken.text}\n(${expectedToken.range})\n\ngot:\n\n${receivedToken.text}\n(${receivedToken.range})\n`,
 			);
 		}
 

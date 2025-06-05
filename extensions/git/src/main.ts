@@ -70,7 +70,7 @@ async function createModel(context: ExtensionContext, logger: LogOutputChannel, 
 		logger.error(`[main] Failed to create git IPC: ${err}`);
 	}
 
-	const askpass = new Askpass(ipcServer, logger);
+	const askpass = new Askpass(ipcServer);
 	disposables.push(askpass);
 
 	const gitEditor = new GitEditor(ipcServer);

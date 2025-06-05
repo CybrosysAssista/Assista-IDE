@@ -6,10 +6,8 @@
 import { BaseToken } from '../../baseToken.js';
 import { PartialFrontMatterArray } from './frontMatterArray.js';
 import { PartialFrontMatterString } from './frontMatterString.js';
-import { asBoolean, FrontMatterBoolean } from '../tokens/frontMatterBoolean.js';
+import { FrontMatterBoolean } from '../tokens/frontMatterBoolean.js';
 import { FrontMatterValueToken } from '../tokens/frontMatterToken.js';
-import { PartialFrontMatterSequence } from './frontMatterSequence.js';
-import { FrontMatterSequence } from '../tokens/frontMatterSequence.js';
 import { TSimpleDecoderToken } from '../../simpleCodec/simpleDecoder.js';
 import { Word, Quote, DoubleQuote, LeftBracket } from '../../simpleCodec/tokens/index.js';
 import { assertNotConsumed, ParserBase, TAcceptTokenResult } from '../../simpleCodec/parserBase.js';
@@ -22,6 +20,7 @@ import { assertNotConsumed, ParserBase, TAcceptTokenResult } from '../../simpleC
  * - {@link LeftBracket} - can start an `array` value
  */
 export const VALID_VALUE_START_TOKENS = Object.freeze([
+	Word,
 	Quote,
 	DoubleQuote,
 	LeftBracket,
@@ -40,7 +39,7 @@ export class PartialFrontMatterValue extends ParserBase<TSimpleDecoderToken, Par
 	 * Current parser reference responsible for parsing
 	 * a specific "value" sequence.
 	 */
-	private currentValueParser?: PartialFrontMatterString | PartialFrontMatterArray | PartialFrontMatterSequence;
+	private currentValueParser?: PartialFrontMatterString | PartialFrontMatterArray;
 
 	/**
 	 * Get the tokens that were accumulated so far.
@@ -51,16 +50,6 @@ export class PartialFrontMatterValue extends ParserBase<TSimpleDecoderToken, Par
 		}
 
 		return this.currentValueParser.tokens;
-	}
-
-	constructor(
-		/**
-		 * Callback function to pass to the {@link PartialFrontMatterSequence}
-		 * if the current "value" sequence is not of a specific type.
-		 */
-		private readonly shouldStop: (token: BaseToken) => boolean,
-	) {
-		super();
 	}
 
 	@assertNotConsumed
@@ -120,25 +109,30 @@ export class PartialFrontMatterValue extends ParserBase<TSimpleDecoderToken, Par
 		}
 
 		// if the first token represents a `word` try to parse a boolean
-		const maybeBoolean = FrontMatterBoolean.tryFromToken(token);
-		if (maybeBoolean !== null) {
+		if (token instanceof Word) {
+			// in either success or failure case, the parser is consumed
 			this.isConsumed = true;
 
-			return {
-				result: 'success',
-				nextParser: maybeBoolean,
-				wasTokenConsumed: true,
-			};
+			try {
+				return {
+					result: 'success',
+					nextParser: new FrontMatterBoolean(token),
+					wasTokenConsumed: true,
+				};
+			} catch (_error) {
+				return {
+					result: 'failure',
+					wasTokenConsumed: false,
+				};
+			}
 		}
 
-		// in all other cases, collect all the subsequent tokens into
-		// a generic sequence of tokens until stopped by the `this.shouldStop`
-		// callback or the call to the 'this.asSequenceToken' method
-		this.currentValueParser = new PartialFrontMatterSequence(
-			this.shouldStop,
-		);
-
-		return this.accept(token);
+		// in all other cases fail due to unexpected value sequence
+		this.isConsumed = true;
+		return {
+			result: 'failure',
+			wasTokenConsumed: false,
+		};
 	}
 
 	/**
@@ -147,38 +141,13 @@ export class PartialFrontMatterValue extends ParserBase<TSimpleDecoderToken, Par
 	 */
 	public static isValueStartToken(
 		token: BaseToken,
-	): token is TValueStartToken | Word<'true' | 'false'> {
+	): token is TValueStartToken {
 		for (const ValidToken of VALID_VALUE_START_TOKENS) {
 			if (token instanceof ValidToken) {
 				return true;
 			}
 		}
 
-		if ((token instanceof Word) && (asBoolean(token) !== null)) {
-			return true;
-		}
-
 		return false;
-	}
-
-	/**
-	 * Check if the current 'value' sequence does not have a specific type
-	 * and is represented by a generic sequence of tokens ({@link PartialFrontMatterSequence}).
-	 */
-	public get isSequence(): boolean {
-		if (this.currentValueParser === undefined) {
-			return false;
-		}
-
-		return (this.currentValueParser instanceof PartialFrontMatterSequence);
-	}
-
-	/**
-	 * Convert current parser into a generic sequence of tokens.
-	 */
-	public asSequenceToken(): FrontMatterSequence {
-		this.isConsumed = true;
-
-		return new FrontMatterSequence(this.tokens);
 	}
 }

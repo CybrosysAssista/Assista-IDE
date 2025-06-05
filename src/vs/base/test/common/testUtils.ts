@@ -3,9 +3,8 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { assert } from '../../common/assert.js';
-import { isOneOf } from '../../common/types.js';
 import { randomInt } from '../../common/numbers.js';
+import { assertOneOf } from '../../common/types.js';
 
 export function flakySuite(title: string, fn: () => void) /* Suite */ {
 	return suite(title, function () {
@@ -53,7 +52,7 @@ export const randomBoolean = (): boolean => {
 };
 
 /**
- * @deprecated use `mock.ts#mock` instead
+ *@deprecated use `mock.ts#mock` instead
  */
 export function mockObject<TObject extends Object>(
 	overrides: Partial<TObject>,
@@ -67,8 +66,9 @@ export function mockObject<TObject extends Object>(
 		{
 			get: (_target, key: string | number | Symbol) => {
 				// sanity check for the provided `key`
-				assert(
-					isOneOf(key, keys),
+				assertOneOf(
+					key,
+					keys,
 					`The '${key}' is not mocked.`,
 				);
 

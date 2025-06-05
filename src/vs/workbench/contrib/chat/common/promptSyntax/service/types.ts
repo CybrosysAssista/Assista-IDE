@@ -5,14 +5,11 @@
 
 import { TTree } from '../utils/treeUtils.js';
 import { ChatMode } from '../../constants.js';
+import { IPromptMetadata } from '../parsers/types.js';
 import { URI } from '../../../../../../base/common/uri.js';
-import { Event } from '../../../../../../base/common/event.js';
-import { TMetadata } from '../parsers/promptHeader/headerBase.js';
 import { ITextModel } from '../../../../../../editor/common/model.js';
 import { IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { TextModelPromptParser } from '../parsers/textModelPromptParser.js';
-import { CancellationToken } from '../../../../../../base/common/cancellation.js';
-import { PromptsType } from '../../../../../../platform/prompts/common/prompts.js';
 import { createDecorator } from '../../../../../../platform/instantiation/common/instantiation.js';
 
 /**
@@ -24,6 +21,11 @@ export const IPromptsService = createDecorator<IPromptsService>('IPromptsService
  * Where the prompt is stored.
  */
 export type TPromptsStorage = 'local' | 'user';
+
+/**
+ * What the prompt is used for.
+ */
+export type TPromptsType = 'instructions' | 'prompt';
 
 /**
  * Represents a prompt path with its type.
@@ -43,7 +45,7 @@ export interface IPromptPath {
 	/**
 	 * Type of the prompt (e.g. 'prompt' or 'instructions').
 	 */
-	readonly type: PromptsType;
+	readonly type: TPromptsType;
 }
 
 /**
@@ -65,39 +67,12 @@ export interface IMetadata {
 	/**
 	 * Metadata of the prompt file.
 	 */
-	readonly metadata: TMetadata | null;
+	readonly metadata: IPromptMetadata;
 
 	/**
 	 * List of metadata for each valid child prompt reference.
 	 */
-	readonly children?: readonly TTree<IMetadata | null>[];
-}
-
-export interface ICustomChatMode {
-	/**
-	 * URI of a custom chat mode file.
-	 */
-	readonly uri: URI;
-
-	/**
-	 * Name of the custom chat mode.
-	 */
-	readonly name: string;
-
-	/**
-	 * Description of the mode
-	 */
-	readonly description?: string;
-
-	/**
-	 * Tools metadata in the prompt header.
-	 */
-	readonly tools?: readonly string[];
-
-	/**
-	 * Contents of the custom chat mode file body.
-	 */
-	readonly body: string;
+	readonly children?: readonly TTree<IMetadata>[];
 }
 
 /**
@@ -158,12 +133,12 @@ export interface IPromptsService extends IDisposable {
 	/**
 	 * List all available prompt files.
 	 */
-	listPromptFiles(type: PromptsType, token: CancellationToken): Promise<readonly IPromptPath[]>;
+	listPromptFiles(type: TPromptsType): Promise<readonly IPromptPath[]>;
 
 	/**
 	 * Get a list of prompt source folders based on the provided prompt type.
 	 */
-	getSourceFolders(type: PromptsType): readonly IPromptPath[];
+	getSourceFolders(type: TPromptsType): readonly IPromptPath[];
 
 	/**
 	 * Returns a prompt command if the command name.
@@ -174,7 +149,7 @@ export interface IPromptsService extends IDisposable {
 	/**
 	 * Gets the prompt file for a slash command.
 	 */
-	resolvePromptSlashCommand(data: IChatPromptSlashCommand): Promise<IMetadata | undefined>;
+	resolvePromptSlashCommand(data: IChatPromptSlashCommand): Promise<IPromptPath | undefined>;
 
 	/**
 	 * Returns a prompt command if the command name is valid.
@@ -190,21 +165,6 @@ export interface IPromptsService extends IDisposable {
 	): Promise<readonly URI[]>;
 
 	/**
-	 * Event that is triggered when the list of custom chat modes changes.
-	 */
-	readonly onDidChangeCustomChatModes: Event<void>;
-
-	/**
-	 * Finds all available custom chat modes
-	 */
-	getCustomChatModes(): Promise<readonly ICustomChatMode[]>;
-
-	/**
-	 * Gets the metadata for the given prompt file uri.
-	 */
-	getMetadata(promptFileUri: URI): Promise<IMetadata>;
-
-	/**
 	 * Get all metadata for entire prompt references tree
 	 * that spans out of each of the provided files.
 	 *
@@ -215,6 +175,23 @@ export interface IPromptsService extends IDisposable {
 	getAllMetadata(
 		promptUris: readonly URI[],
 	): Promise<readonly IMetadata[]>;
+
+	/**
+	 * Computes "combined" tools and chat mode metadata based on
+	 * all provided files and their respective child references
+	 * at the same time.
+	 *
+	 * For instance, the resulting {@link TCombinedToolsMetadata.mode}
+	 * is computed as the least-privileged chat mode that can satisfy
+	 * all the prompt files and their child references.
+	 *
+	 * On the other hand the resulting {@link TCombinedToolsMetadata.tools}
+	 * metadata is computed as a union of all tools metadata that all
+	 * prompt files and their child references specify.
+	 */
+	getCombinedToolsMetadata(
+		promptUris: readonly URI[],
+	): Promise<TCombinedToolsMetadata | null>;
 }
 
 export interface IChatPromptSlashCommand {

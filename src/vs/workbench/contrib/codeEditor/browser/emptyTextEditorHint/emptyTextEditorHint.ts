@@ -33,7 +33,6 @@ import { IContextMenuService } from '../../../../../platform/contextview/browser
 import { StandardMouseEvent } from '../../../../../base/browser/mouseEvent.js';
 import { ChatAgentLocation } from '../../../chat/common/constants.js';
 import { IInstantiationService } from '../../../../../platform/instantiation/common/instantiation.js';
-import { Position } from '../../../../../editor/common/core/position.js';
 
 export const emptyTextEditorHintSetting = 'workbench.editor.empty.hint';
 export class EmptyTextEditorHintContribution extends Disposable implements IEditorContribution {
@@ -320,7 +319,7 @@ class EmptyTextEditorHintContentWidget extends Disposable implements IContentWid
 			}));
 
 			this.editor.applyFontInfo(this.domNode);
-			const lineHeight = this.editor.getLineHeightForPosition(new Position(1, 1));
+			const lineHeight = this.editor.getLineHeightForLineNumber(1);
 			this.domNode.style.lineHeight = lineHeight + 'px';
 		}
 

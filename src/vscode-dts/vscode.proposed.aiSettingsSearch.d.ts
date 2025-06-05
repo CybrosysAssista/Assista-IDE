@@ -18,7 +18,6 @@ declare module 'vscode' {
 
 	export interface SettingsSearchProviderOptions {
 		limit: number;
-		embeddingsOnly: boolean;
 	}
 
 	export interface SettingsSearchProvider {

@@ -22,7 +22,7 @@ import { IProductService } from '../../product/common/productService.js';
 import { IStateService } from '../../state/node/state.js';
 import { ITelemetryService } from '../../telemetry/common/telemetry.js';
 import { IUpdateService, StateType } from '../../update/common/update.js';
-import { INativeRunActionInWindowRequest, INativeRunKeybindingInWindowRequest, IWindowOpenable, hasNativeMenu } from '../../window/common/window.js';
+import { INativeRunActionInWindowRequest, INativeRunKeybindingInWindowRequest, IWindowOpenable, hasNativeTitlebar } from '../../window/common/window.js';
 import { IWindowsCountChangedEvent, IWindowsMainService, OpenContext } from '../../windows/electron-main/windows.js';
 import { IWorkspacesHistoryMainService } from '../../workspaces/electron-main/workspacesHistoryMainService.js';
 import { Disposable } from '../../../base/common/lifecycle.js';
@@ -51,7 +51,6 @@ export class Menubar extends Disposable {
 	private appMenuInstalled: boolean | undefined;
 	private closedLastWindow: boolean;
 	private noActiveMainWindow: boolean;
-	private showNativeMenu: boolean;
 
 	private menuUpdater: RunOnceScheduler;
 	private menuGC: RunOnceScheduler;
@@ -88,9 +87,8 @@ export class Menubar extends Disposable {
 
 		this.menubarMenus = Object.create(null);
 		this.keybindings = Object.create(null);
-		this.showNativeMenu = hasNativeMenu(configurationService);
 
-		if (isMacintosh || this.showNativeMenu) {
+		if (isMacintosh || hasNativeTitlebar(configurationService)) {
 			this.restoreCachedMenubarData();
 		}
 
@@ -481,7 +479,7 @@ export class Menubar extends Disposable {
 
 	private shouldDrawMenu(menuId: string): boolean {
 		// We need to draw an empty menu to override the electron default
-		if (!isMacintosh && !this.showNativeMenu) {
+		if (!isMacintosh && !hasNativeTitlebar(this.configurationService)) {
 			return false;
 		}
 

@@ -16,7 +16,6 @@ import { CancellationError, CancellationToken, ConfigurationChangeEvent, LogOutp
 import { Commit as ApiCommit, Ref, RefType, Branch, Remote, ForcePushMode, GitErrorCodes, LogOptions, Change, Status, CommitOptions, RefQuery as ApiRefQuery, InitOptions } from './api/git';
 import * as byline from 'byline';
 import { StringDecoder } from 'string_decoder';
-import { sequentialize } from './decorators';
 
 // https://github.com/microsoft/vscode/issues/65693
 const MAX_CLI_LENGTH = 30000;
@@ -342,8 +341,6 @@ function getGitErrorCode(stderr: string): string | undefined {
 		return GitErrorCodes.InvalidBranchName;
 	} else if (/Please,? commit your changes or stash them/.test(stderr)) {
 		return GitErrorCodes.DirtyWorkTree;
-	} else if (/detected dubious ownership in repository at/.test(stderr)) {
-		return GitErrorCodes.NotASafeGitRepository;
 	}
 
 	return undefined;
@@ -1242,7 +1239,6 @@ export class Repository {
 		return this.git.spawn(args, options);
 	}
 
-	@sequentialize
 	async config(command: string, scope: string, key: string, value: any = null, options: SpawnOptions = {}): Promise<string> {
 		const args = ['config', `--${command}`];
 
@@ -1284,8 +1280,8 @@ export class Repository {
 		});
 	}
 
-	async log(options?: LogOptions, cancellationToken?: CancellationToken): Promise<Commit[]> {
-		const spawnOptions: SpawnOptions = { cancellationToken };
+	async log(options?: LogOptions): Promise<Commit[]> {
+		const spawnOptions: SpawnOptions = {};
 		const args = ['log', `--format=${COMMIT_FORMAT}`, '-z'];
 
 		if (options?.shortStats) {
@@ -1311,13 +1307,7 @@ export class Repository {
 		}
 
 		if (options?.author) {
-			args.push(`--author=${options.author}`);
-		}
-
-		if (options?.grep) {
-			args.push(`--grep=${options.grep}`);
-			args.push('--extended-regexp');
-			args.push('--regexp-ignore-case');
+			args.push(`--author="${options.author}"`);
 		}
 
 		if (typeof options?.maxParents === 'number') {
@@ -1352,7 +1342,7 @@ export class Repository {
 		return parseGitCommits(result.stdout);
 	}
 
-	async logFile(uri: Uri, options?: LogFileOptions, cancellationToken?: CancellationToken): Promise<Commit[]> {
+	async logFile(uri: Uri, options?: LogFileOptions): Promise<Commit[]> {
 		const args = ['log', `--format=${COMMIT_FORMAT}`, '-z'];
 
 		if (options?.maxEntries && !options?.reverse) {
@@ -1383,7 +1373,7 @@ export class Repository {
 		args.push('--', uri.fsPath);
 
 		try {
-			const result = await this.exec(args, { cancellationToken });
+			const result = await this.exec(args);
 			if (result.exitCode) {
 				// No file history, e.g. a new file or untracked
 				return [];
@@ -2935,19 +2925,6 @@ export class Repository {
 			return Promise.reject<Commit>('bad commit format');
 		}
 		return commits[0];
-	}
-
-	async showCommit(ref: string): Promise<string> {
-		try {
-			const result = await this.exec(['show', ref]);
-			return result.stdout.trim();
-		} catch (err) {
-			if (/^fatal: bad revision '.+'/.test(err.stderr || '')) {
-				err.gitErrorCode = GitErrorCodes.BadRevision;
-			}
-
-			throw err;
-		}
 	}
 
 	async revList(ref1: string, ref2: string): Promise<string[]> {

@@ -7,7 +7,7 @@ export const WelcomeView = () => {
 			<Stack grow={true} verticalFill={true}>
 				<Stack.Item>
 					<Text>
-						Welcome to the VS Code Tools application.
+						Welcome to the Cybrosys Assista Tools application.
 					</Text>
 				</Stack.Item>
 			</Stack>

@@ -6,9 +6,8 @@
 import { CancellationToken } from '../../../../../base/common/cancellation.js';
 import { Event } from '../../../../../base/common/event.js';
 import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
-import { constObservable, IObservable } from '../../../../../base/common/observable.js';
 import { IProgressStep } from '../../../../../platform/progress/common/progress.js';
-import { CountTokensCallback, ILanguageModelToolsService, IToolData, IToolImpl, IToolInvocation, IToolResult, ToolSet } from '../../common/languageModelToolsService.js';
+import { CountTokensCallback, ILanguageModelToolsService, IToolData, IToolImpl, IToolInvocation, IToolResult } from '../../common/languageModelToolsService.js';
 
 export class MockLanguageModelToolsService implements ILanguageModelToolsService {
 	_serviceBrand: undefined;
@@ -44,7 +43,7 @@ export class MockLanguageModelToolsService implements ILanguageModelToolsService
 		return undefined;
 	}
 
-	getToolByName(name: string, includeDisabled?: boolean): IToolData | undefined {
+	getToolByName(name: string): IToolData | undefined {
 		return undefined;
 	}
 
@@ -56,19 +55,5 @@ export class MockLanguageModelToolsService implements ILanguageModelToolsService
 		return {
 			content: [{ kind: 'text', value: 'result' }]
 		};
-	}
-
-	toolSets: IObservable<readonly ToolSet[]> = constObservable([]);
-
-	getToolSetByName(name: string): ToolSet | undefined {
-		return undefined;
-	}
-
-	createToolSet(): ToolSet & IDisposable {
-		throw new Error('Method not implemented.');
-	}
-
-	toEnablementMap(toolOrToolSetNames: Iterable<string>): Record<string, boolean> {
-		throw new Error('Method not implemented.');
 	}
 }

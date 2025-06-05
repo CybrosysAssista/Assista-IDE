@@ -55,16 +55,8 @@ export class AsyncDecoder<T extends NonNullable<unknown>, K extends NonNullable<
 				delete this.resolveOnNewEvent;
 			}
 		};
-
-		/**
-		 * !NOTE! The order of event subscriptions below is critical here because
-		 *        the `data` event is also starts the stream, hence changing
-		 *        the order of event subscriptions can lead to race conditions.
-		 *        See {@link ReadableStreamEvents} for more info.
-		 */
-
-		this.decoder.on('end', callback);
 		this.decoder.on('data', callback);
+		this.decoder.on('end', callback);
 
 		// start flowing the decoder stream
 		this.decoder.start();

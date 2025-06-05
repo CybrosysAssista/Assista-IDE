@@ -481,7 +481,7 @@ export class FindWidget extends Widget implements IOverlayWidget, IVerticalSashL
 		this._toggleReplaceBtn.setEnabled(this._isVisible && canReplace);
 	}
 
-	private _revealTimeouts: Timeout[] = [];
+	private _revealTimeouts: any[] = [];
 
 	private _reveal(): void {
 		this._revealTimeouts.forEach(e => {
@@ -951,14 +951,9 @@ export class FindWidget extends Widget implements IOverlayWidget, IVerticalSashL
 		this._findInput.setRegex(!!this._state.isRegex);
 		this._findInput.setCaseSensitive(!!this._state.matchCase);
 		this._findInput.setWholeWords(!!this._state.wholeWord);
-		this._register(this._findInput.onKeyDown((e) => {
-			if (e.equals(KeyCode.Enter) && !this._codeEditor.getOption(EditorOption.find).findOnType) {
-				this._state.change({ searchString: this._findInput.getValue() }, true);
-			}
-			this._onFindInputKeyDown(e);
-		}));
+		this._register(this._findInput.onKeyDown((e) => this._onFindInputKeyDown(e)));
 		this._register(this._findInput.inputBox.onDidChange(() => {
-			if (this._ignoreChangeEvent || !this._codeEditor.getOption(EditorOption.find).findOnType) {
+			if (this._ignoreChangeEvent) {
 				return;
 			}
 			this._state.change({ searchString: this._findInput.getValue() }, true);

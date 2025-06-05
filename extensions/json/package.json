@@ -11,9 +11,7 @@
   "scripts": {
     "update-grammar": "node ./build/update-grammars.js"
   },
-  "categories": [
-    "Programming Languages"
-  ],
+  "categories": ["Programming Languages"],
   "contributes": {
     "languages": [
       {
@@ -60,8 +58,7 @@
           ".jshintrc",
           ".swcrc",
           ".hintrc",
-          ".babelrc",
-          ".toolset.jsonc"
+          ".babelrc"
         ],
         "filenames": [
           "babel.config.json",
@@ -87,7 +84,7 @@
       {
         "id": "snippets",
         "aliases": [
-          "Code Snippets"
+            "Code Snippets"
         ],
         "extensions": [
           ".code-snippets"

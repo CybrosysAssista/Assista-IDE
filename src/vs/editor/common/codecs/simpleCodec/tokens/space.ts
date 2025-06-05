@@ -3,13 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { SpacingToken } from './simpleToken.js';
+import { SimpleToken } from './simpleToken.js';
 
 /**
  * A token that represent a `space` with a `range`. The `range`
  * value reflects the position of the token in the original data.
- */
-export class Space extends SpacingToken<' '> {
+ */export class Space extends SimpleToken<' '> {
 	/**
 	 * The underlying symbol of the `Space` token.
 	 */

@@ -54,9 +54,6 @@ export abstract class AbstractChatEditingModifiedFileEntry extends Disposable im
 	protected readonly _stateObs = observableValue<ModifiedFileEntryState>(this, ModifiedFileEntryState.Modified);
 	readonly state: IObservable<ModifiedFileEntryState> = this._stateObs;
 
-	protected readonly _waitsForLastEdits = observableValue<boolean>(this, false);
-	readonly waitsForLastEdits: IObservable<boolean> = this._waitsForLastEdits;
-
 	protected readonly _isCurrentlyBeingModifiedByObs = observableValue<IChatResponseModel | undefined>(this, undefined);
 	readonly isCurrentlyBeingModifiedBy: IObservable<IChatResponseModel | undefined> = this._isCurrentlyBeingModifiedByObs;
 
@@ -136,7 +133,7 @@ export abstract class AbstractChatEditingModifiedFileEntry extends Disposable im
 
 		const autoSaveOff = this._store.add(new MutableDisposable());
 		this._store.add(autorun(r => {
-			if (this._waitsForLastEdits.read(r)) {
+			if (this._lastModifyingResponseInProgressObs.read(r)) {
 				autoSaveOff.value = _fileConfigService.disableAutoSave(this.modifiedURI);
 			} else {
 				autoSaveOff.clear();
@@ -297,7 +294,6 @@ export abstract class AbstractChatEditingModifiedFileEntry extends Disposable im
 	protected _resetEditsState(tx: ITransaction): void {
 		this._isCurrentlyBeingModifiedByObs.set(undefined, tx);
 		this._rewriteRatioObs.set(0, tx);
-		this._waitsForLastEdits.set(false, tx);
 	}
 
 	// --- snapshot

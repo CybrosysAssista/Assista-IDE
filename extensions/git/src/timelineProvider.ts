@@ -35,7 +35,7 @@ export class GitTimelineItem extends TimelineItem {
 		contextValue: string
 	) {
 		const index = message.indexOf('\n');
-		const label = index !== -1 ? `${truncate(message, index, false)}` : message;
+		const label = index !== -1 ? `${truncate(message, index)}` : message;
 
 		super(label, timestamp);
 
@@ -149,7 +149,7 @@ export class GitTimelineProvider implements TimelineProvider {
 		this.disposable.dispose();
 	}
 
-	async provideTimeline(uri: Uri, options: TimelineOptions, token: CancellationToken): Promise<Timeline> {
+	async provideTimeline(uri: Uri, options: TimelineOptions, _token: CancellationToken): Promise<Timeline> {
 		// console.log(`GitTimelineProvider.provideTimeline: uri=${uri}`);
 
 		const repo = this.model.getRepository(uri);
@@ -194,17 +194,13 @@ export class GitTimelineProvider implements TimelineProvider {
 
 		await ensureEmojis();
 
-		const commits = await repo.logFile(
-			uri,
-			{
-				maxEntries: limit,
-				hash: options.cursor,
-				follow: true,
-				shortStats: true,
-				// sortByAuthorDate: true
-			},
-			token
-		);
+		const commits = await repo.logFile(uri, {
+			maxEntries: limit,
+			hash: options.cursor,
+			follow: true,
+			shortStats: true,
+			// sortByAuthorDate: true
+		});
 
 		const paging = commits.length ? {
 			cursor: limit === undefined ? undefined : (commits.length >= limit ? commits[commits.length - 1]?.hash : undefined)

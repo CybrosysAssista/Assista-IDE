@@ -36,7 +36,7 @@ import { ChatSessionStore, IChatTransfer2 } from './chatSessionStore.js';
 import { IChatSlashCommandService } from './chatSlashCommands.js';
 import { IChatTransferService } from './chatTransferService.js';
 import { ChatAgentLocation, ChatConfiguration, ChatMode } from './constants.js';
-import { ChatMessageRole, IChatMessage, ILanguageModelsService } from './languageModels.js';
+import { ChatMessageRole, IChatMessage } from './languageModels.js';
 import { ILanguageModelToolsService } from './languageModelToolsService.js';
 
 const serializedChatKey = 'interactive.sessions';
@@ -60,7 +60,6 @@ type ChatProviderInvokedEvent = {
 	isParticipantDetected: boolean;
 	enableCommandDetection: boolean;
 	attachmentKinds: string[];
-	model: string | undefined;
 };
 
 type ChatProviderInvokedClassification = {
@@ -78,7 +77,6 @@ type ChatProviderInvokedClassification = {
 	isParticipantDetected: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether the participant was automatically detected.' };
 	enableCommandDetection: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'Whether participation detection was disabled for this invocation.' };
 	attachmentKinds: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The types of variables/attachments that the user included with their query.' };
-	model: { classification: 'SystemMetaData'; purpose: 'FeatureInsight'; comment: 'The model used to generate the response.' };
 	owner: 'roblourens';
 	comment: 'Provides insight into the performance of Chat agents.';
 };
@@ -159,7 +157,6 @@ export class ChatService extends Disposable implements IChatService {
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IWorkbenchAssignmentService private readonly experimentService: IWorkbenchAssignmentService,
 		@IChatTransferService private readonly chatTransferService: IChatTransferService,
-		@ILanguageModelsService private readonly languageModelsService: ILanguageModelsService,
 	) {
 		super();
 
@@ -673,25 +670,20 @@ export class ChatService extends Disposable implements IChatService {
 		const source = new CancellationTokenSource();
 		const token = source.token;
 		const sendRequestInternal = async () => {
-			const progressCallback = (progress: IChatProgress[]) => {
+			const progressCallback = (progress: IChatProgress) => {
 				if (token.isCancellationRequested) {
 					return;
 				}
 
 				gotProgress = true;
 
-				for (let i = 0; i < progress.length; i++) {
-					const isLast = i === progress.length - 1;
-					const progressItem = progress[i];
-
-					if (progressItem.kind === 'markdownContent') {
-						this.trace('sendRequest', `Provider returned progress for session ${model.sessionId}, ${progressItem.content.value.length} chars`);
-					} else {
-						this.trace('sendRequest', `Provider returned progress: ${JSON.stringify(progressItem)}`);
-					}
-
-					model.acceptResponseProgress(request, progressItem, !isLast);
+				if (progress.kind === 'markdownContent') {
+					this.trace('sendRequest', `Provider returned progress for session ${model.sessionId}, ${progress.content.value.length} chars`);
+				} else {
+					this.trace('sendRequest', `Provider returned progress: ${JSON.stringify(progress)}`);
 				}
+
+				model.acceptResponseProgress(request, progress);
 				completeResponseCreated();
 			};
 
@@ -716,8 +708,7 @@ export class ChatService extends Disposable implements IChatService {
 					numCodeBlocks: getCodeBlocks(request.response?.response.toString() ?? '').length,
 					isParticipantDetected: !!detectedAgent,
 					enableCommandDetection,
-					attachmentKinds: this.attachmentKindsForTelemetry(request.variableData),
-					model: this.resolveModelId(options?.userSelectedModelId),
+					attachmentKinds: this.attachmentKindsForTelemetry(request.variableData)
 				});
 
 				model.cancelRequest(request);
@@ -763,7 +754,7 @@ export class ChatService extends Disposable implements IChatService {
 							rejectedConfirmationData: options?.rejectedConfirmationData,
 							userSelectedModelId: options?.userSelectedModelId,
 							userSelectedTools: options?.userSelectedTools,
-							modeInstructions: options?.modeInstructions,
+							userSelectedTools2: options?.userSelectedTools2,
 							toolSelectionIsExclusive: options?.toolSelectionIsExclusive,
 							editedFileEvents: request.editedFileEvents
 						} satisfies IChatAgentRequest;
@@ -819,7 +810,7 @@ export class ChatService extends Disposable implements IChatService {
 					}
 					const message = parsedRequest.text;
 					const commandResult = await this.chatSlashCommandService.executeCommand(commandPart.slashCommand.command, message.substring(commandPart.slashCommand.command.length + 1).trimStart(), new Progress<IChatProgress>(p => {
-						progressCallback([p]);
+						progressCallback(p);
 					}), history, location, token);
 					agentOrCommandFollowups = Promise.resolve(commandResult?.followUp);
 					rawResult = {};
@@ -828,7 +819,7 @@ export class ChatService extends Disposable implements IChatService {
 					throw new Error(`Cannot handle request`);
 				}
 
-				if (token.isCancellationRequested && !rawResult) {
+				if (token.isCancellationRequested) {
 					return;
 				} else {
 					if (!rawResult) {
@@ -855,8 +846,7 @@ export class ChatService extends Disposable implements IChatService {
 						location,
 						citations: request.response?.codeCitations.length ?? 0,
 						numCodeBlocks: getCodeBlocks(request.response?.response.toString() ?? '').length,
-						attachmentKinds: this.attachmentKindsForTelemetry(request.variableData),
-						model: this.resolveModelId(options?.userSelectedModelId),
+						attachmentKinds: this.attachmentKindsForTelemetry(request.variableData)
 					});
 					model.setResponse(request, rawResult);
 					completeResponseCreated();
@@ -891,8 +881,7 @@ export class ChatService extends Disposable implements IChatService {
 					numCodeBlocks: 0,
 					enableCommandDetection,
 					isParticipantDetected: !!detectedAgent,
-					attachmentKinds: this.attachmentKindsForTelemetry(request.variableData),
-					model: this.resolveModelId(options?.userSelectedModelId)
+					attachmentKinds: this.attachmentKindsForTelemetry(request.variableData)
 				});
 				this.logService.error(`Error while handling chat request: ${toErrorMessage(err, true)}`);
 				if (request) {
@@ -916,10 +905,6 @@ export class ChatService extends Disposable implements IChatService {
 			responseCreatedPromise: responseCreated.p,
 			responseCompletePromise: rawResponsePromise,
 		};
-	}
-
-	private resolveModelId(userSelectedModelId: string | undefined): string | undefined {
-		return userSelectedModelId && this.languageModelsService.lookupLanguageModel(userSelectedModelId)?.id;
 	}
 
 	private prepareContext(attachedContextVariables: IChatRequestVariableEntry[] | undefined): IChatRequestVariableEntry[] {

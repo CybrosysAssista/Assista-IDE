@@ -5,8 +5,7 @@
 
 import { TopError } from './topError.js';
 import { ChatMode } from '../../constants.js';
-import { TMetadata } from './promptHeader/headerBase.js';
-import { ModeHeader } from './promptHeader/modeHeader.js';
+import { PromptHeader } from './promptHeader/header.js';
 import { URI } from '../../../../../../base/common/uri.js';
 import { PromptToken } from '../codecs/tokens/promptToken.js';
 import * as path from '../../../../../../base/common/path.js';
@@ -14,31 +13,27 @@ import { ChatPromptCodec } from '../codecs/chatPromptCodec.js';
 import { FileReference } from '../codecs/tokens/fileReference.js';
 import { ChatPromptDecoder } from '../codecs/chatPromptDecoder.js';
 import { assertDefined } from '../../../../../../base/common/types.js';
+import { IPromptContentsProvider } from '../contentProviders/types.js';
 import { Event, Emitter } from '../../../../../../base/common/event.js';
+import { IDisposable } from '../../../../../../base/common/lifecycle.js';
 import { DeferredPromise } from '../../../../../../base/common/async.js';
-import { InstructionsHeader } from './promptHeader/instructionsHeader.js';
 import { ILogService } from '../../../../../../platform/log/common/log.js';
 import { PromptVariableWithData } from '../codecs/tokens/promptVariable.js';
-import type { IPromptContentsProvider } from '../contentProviders/types.js';
-import type { TPromptReference, IResolveError, ITopError } from './types.js';
-import { type IDisposable } from '../../../../../../base/common/lifecycle.js';
+import { IRange, Range } from '../../../../../../editor/common/core/range.js';
 import { assert, assertNever } from '../../../../../../base/common/assert.js';
 import { basename, dirname } from '../../../../../../base/common/resources.js';
 import { BaseToken } from '../../../../../../editor/common/codecs/baseToken.js';
 import { VSBufferReadableStream } from '../../../../../../base/common/buffer.js';
-import { type IRange, Range } from '../../../../../../editor/common/core/range.js';
-import { PromptHeader, type TPromptMetadata } from './promptHeader/promptHeader.js';
+import { IPromptMetadata, TPromptReference, IResolveError, ITopError } from './types.js';
 import { ObservableDisposable } from '../../../../../../base/common/observableDisposable.js';
-import { INSTRUCTIONS_LANGUAGE_ID, MODE_LANGUAGE_ID, PROMPT_LANGUAGE_ID } from '../constants.js';
-import { LinesDecoder } from '../../../../../../editor/common/codecs/linesCodec/linesDecoder.js';
 import { IWorkspaceContextService } from '../../../../../../platform/workspace/common/workspace.js';
+import { isPromptOrInstructionsFile } from '../../../../../../platform/prompts/common/constants.js';
 import { IInstantiationService } from '../../../../../../platform/instantiation/common/instantiation.js';
 import { MarkdownLink } from '../../../../../../editor/common/codecs/markdownCodec/tokens/markdownLink.js';
 import { MarkdownToken } from '../../../../../../editor/common/codecs/markdownCodec/tokens/markdownToken.js';
-import { isPromptOrInstructionsFile, PromptsType } from '../../../../../../platform/prompts/common/prompts.js';
 import { FrontMatterHeader } from '../../../../../../editor/common/codecs/markdownExtensionsCodec/tokens/frontMatterHeader.js';
 import { OpenFailed, NotPromptFile, RecursiveReference, FolderReference, ResolveError } from '../../promptFileReferenceErrors.js';
-import { type IPromptContentsProviderOptions, DEFAULT_OPTIONS as CONTENTS_PROVIDER_DEFAULT_OPTIONS } from '../contentProviders/promptContentsProviderBase.js';
+import { IPromptContentsProviderOptions, DEFAULT_OPTIONS as CONTENTS_PROVIDER_DEFAULT_OPTIONS } from '../contentProviders/promptContentsProviderBase.js';
 
 /**
  * Options of the {@link BasePromptParser} class.
@@ -96,34 +91,14 @@ export class BasePromptParser<TContentsProvider extends IPromptContentsProvider>
 	 * Reference to the prompt header object that holds metadata associated
 	 * with the prompt.
 	 */
-	private promptHeader?: PromptHeader | InstructionsHeader | ModeHeader | undefined;
+	private promptHeader?: PromptHeader;
 
 	/**
 	 * Reference to the prompt header object that holds metadata associated
 	 * with the prompt.
 	 */
-	public get header(): PromptHeader | InstructionsHeader | ModeHeader | undefined {
+	public get header(): PromptHeader | undefined {
 		return this.promptHeader;
-	}
-
-	/**
-	 * Get contents of the prompt body.
-	 */
-	public async getBody(): Promise<string> {
-		const startLineNumber = (this.header !== undefined)
-			? this.header.range.endLineNumber + 1
-			: 1;
-
-		const decoder = new LinesDecoder(
-			await this.promptContentsProvider.contents,
-		);
-
-		const tokens = (await decoder.consumeAll())
-			.filter(({ range }) => {
-				return (range.startLineNumber >= startLineNumber);
-			});
-
-		return BaseToken.render(tokens);
 	}
 
 	/**
@@ -371,7 +346,12 @@ export class BasePromptParser<TContentsProvider extends IPromptContentsProvider>
 
 			// if a prompt header token received, create a new prompt header instance
 			if (token instanceof FrontMatterHeader) {
-				return this.createHeader(token);
+				this.promptHeader = new PromptHeader(
+					token.contentToken,
+					this.promptContentsProvider.languageId,
+				).start();
+
+				return;
 			}
 
 			// try to convert a prompt variable with data token into a file reference
@@ -402,30 +382,6 @@ export class BasePromptParser<TContentsProvider extends IPromptContentsProvider>
 
 		// start receiving data on the stream
 		this.stream.start();
-	}
-
-	/**
-	 * Create header object base on the target prompt file language ID.
-	 * The language ID is important here, because it defines what type
-	 * of metadata is valid for a prompt file and what type of related
-	 * diagnostics we would show to the user.
-	 */
-	private createHeader(headerToken: FrontMatterHeader): void {
-		const { languageId } = this.promptContentsProvider;
-
-		if (languageId === PROMPT_LANGUAGE_ID) {
-			this.promptHeader = new PromptHeader(headerToken, languageId);
-		}
-
-		if (languageId === INSTRUCTIONS_LANGUAGE_ID) {
-			this.promptHeader = new InstructionsHeader(headerToken, languageId);
-		}
-
-		if (languageId === MODE_LANGUAGE_ID) {
-			this.promptHeader = new ModeHeader(headerToken, languageId);
-		}
-
-		this.promptHeader?.start();
 	}
 
 	/**
@@ -611,43 +567,30 @@ export class BasePromptParser<TContentsProvider extends IPromptContentsProvider>
 	/**
 	 * Valid metadata records defined in the prompt header.
 	 */
-	public get metadata(): TMetadata | null {
-		const { promptType } = this.promptContentsProvider;
-		if (promptType === 'non-prompt') {
-			return null;
-		}
-
+	public get metadata(): IPromptMetadata {
 		if (this.header === undefined) {
-			return { promptType };
+			return {};
 		}
 
-		if (this.header instanceof InstructionsHeader) {
-			return { promptType, ...this.header.metadata };
+		const { metadata } = this.header;
+		if (metadata === undefined) {
+			return {};
 		}
 
-		const { tools, mode, description } = this.header.metadata;
+		const { tools, mode, description, applyTo } = metadata;
 
 		// compute resulting mode based on presence
 		// of `tools` metadata in the prompt header
 		const resultingMode = (tools !== undefined)
 			? ChatMode.Agent
-			: mode;
+			: mode?.chatMode;
 
-		const result: Partial<TPromptMetadata> = {};
-
-		if (description !== undefined) {
-			result.description = description;
-		}
-
-		if (tools !== undefined) {
-			result.tools = tools;
-		}
-
-		if (resultingMode !== undefined) {
-			result.mode = resultingMode;
-		}
-
-		return { promptType, ...result };
+		return {
+			mode: resultingMode,
+			description: description?.text,
+			tools: tools?.toolNames,
+			applyTo: applyTo?.text,
+		};
 	}
 
 	/**
@@ -657,10 +600,6 @@ export class BasePromptParser<TContentsProvider extends IPromptContentsProvider>
 	public get allToolsMetadata(): readonly string[] | null {
 		let hasTools = false;
 		const result: string[] = [];
-
-		if (this.metadata?.promptType !== PromptsType.prompt) {
-			return null;
-		}
 
 		const { tools, mode } = this.metadata;
 
@@ -973,7 +912,7 @@ export class PromptReference extends ObservableDisposable implements TPromptRefe
 		return this.parser.allReferences;
 	}
 
-	public get metadata(): TMetadata | null {
+	public get metadata(): IPromptMetadata {
 		return this.parser.metadata;
 	}
 

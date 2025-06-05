@@ -5,7 +5,6 @@
 
 import { BaseToken } from '../../baseToken.js';
 import { CompositeToken } from '../../compositeToken.js';
-import { FrontMatterSequence } from './frontMatterSequence.js';
 
 /**
  * Base class for all tokens inside a Front Matter header.
@@ -17,7 +16,7 @@ export abstract class FrontMatterToken<
 /**
  * List of all currently supported value types.
  */
-export type TValueTypeName = 'quoted-string' | 'boolean' | 'array' | FrontMatterSequence;
+export type TValueTypeName = 'string' | 'boolean' | 'array';
 
 /**
  * Base class for all tokens that represent a `value` inside a Front Matter header.

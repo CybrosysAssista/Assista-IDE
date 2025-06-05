@@ -228,7 +228,7 @@ export class LongRunningOperation extends Disposable {
 	private currentOperationId = 0;
 	private readonly currentOperationDisposables = this._register(new DisposableStore());
 	private currentProgressRunner: IProgressRunner | undefined;
-	private currentProgressTimeout: Timeout | undefined = undefined;
+	private currentProgressTimeout: any;
 
 	constructor(
 		private progressIndicator: IProgressIndicator

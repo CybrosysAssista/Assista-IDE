@@ -109,9 +109,9 @@ class ServerKeyedAESCrypto implements ISecretStorageCrypto {
 		// Do the decryption and parse the result as JSON
 		const key = await this.getKey(clientKey.buffer);
 		const decrypted = await mainWindow.crypto.subtle.decrypt(
-			{ name: AESConstants.ALGORITHM as const, iv: iv.buffer as Uint8Array<ArrayBuffer> },
+			{ name: AESConstants.ALGORITHM as const, iv: iv.buffer },
 			key,
-			cipherText.buffer as Uint8Array<ArrayBuffer>
+			cipherText.buffer
 		);
 
 		return new TextDecoder().decode(new Uint8Array(decrypted));
@@ -302,7 +302,7 @@ class LocalStorageURLCallbackProvider extends Disposable implements IURLCallback
 
 	private pendingCallbacks = new Set<number>();
 	private lastTimeChecked = Date.now();
-	private checkCallbacksTimeout: Timeout | undefined = undefined;
+	private checkCallbacksTimeout: unknown | undefined = undefined;
 	private onDidChangeLocalStorageDisposable: IDisposable | undefined;
 
 	constructor(private readonly _callbackRoute: string) {

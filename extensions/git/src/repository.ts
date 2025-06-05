@@ -7,7 +7,7 @@ import TelemetryReporter from '@vscode/extension-telemetry';
 import * as fs from 'fs';
 import * as path from 'path';
 import picomatch from 'picomatch';
-import { CancellationError, CancellationToken, CancellationTokenSource, Command, commands, Disposable, Event, EventEmitter, FileDecoration, FileType, l10n, LogLevel, LogOutputChannel, Memento, ProgressLocation, ProgressOptions, QuickDiffProvider, RelativePattern, scm, SourceControl, SourceControlInputBox, SourceControlInputBoxValidation, SourceControlInputBoxValidationType, SourceControlResourceDecorations, SourceControlResourceGroup, SourceControlResourceState, TabInputNotebookDiff, TabInputTextDiff, TabInputTextMultiDiff, ThemeColor, Uri, window, workspace, WorkspaceEdit } from 'vscode';
+import { CancellationError, CancellationToken, CancellationTokenSource, Command, commands, Disposable, Event, EventEmitter, FileDecoration, l10n, LogLevel, LogOutputChannel, Memento, ProgressLocation, ProgressOptions, QuickDiffProvider, RelativePattern, scm, SourceControl, SourceControlInputBox, SourceControlInputBoxValidation, SourceControlInputBoxValidationType, SourceControlResourceDecorations, SourceControlResourceGroup, SourceControlResourceState, TabInputNotebookDiff, TabInputTextDiff, TabInputTextMultiDiff, ThemeColor, Uri, window, workspace, WorkspaceEdit } from 'vscode';
 import { ActionButton } from './actionButton';
 import { ApiRepository } from './api/api1';
 import { Branch, BranchQuery, Change, CommitOptions, FetchOptions, ForcePushMode, GitErrorCodes, LogOptions, Ref, RefType, Remote, Status } from './api/git';
@@ -22,7 +22,7 @@ import { IPushErrorHandlerRegistry } from './pushError';
 import { IRemoteSourcePublisherRegistry } from './remotePublisher';
 import { StatusBarCommands } from './statusbar';
 import { toGitUri } from './uri';
-import { anyEvent, combinedDisposable, debounceEvent, dispose, EmptyDisposable, eventToPromise, filterEvent, find, getCommitShortHash, IDisposable, isDescendant, isLinuxSnap, isRemote, isWindows, Limiter, onceEvent, pathEquals, relativePath } from './util';
+import { anyEvent, combinedDisposable, debounceEvent, dispose, EmptyDisposable, eventToPromise, filterEvent, find, getCommitShortHash, IDisposable, isDescendant, isLinuxSnap, isRemote, Limiter, onceEvent, pathEquals, relativePath } from './util';
 import { IFileWatcher, watch } from './watch';
 import { ISourceControlHistoryItemDetailsProviderRegistry } from './historyItemDetailsProvider';
 
@@ -1024,19 +1024,11 @@ export class Repository implements Disposable {
 		return l10n.t('Git Local Changes (Working Tree)');
 	}
 
-	async provideOriginalResource(uri: Uri): Promise<Uri | undefined> {
+	provideOriginalResource(uri: Uri): Uri | undefined {
 		this.logger.trace(`[Repository][provideOriginalResource] Resource: ${uri.toString()}`);
 
 		if (uri.scheme !== 'file') {
-			this.logger.trace(`[Repository][provideOriginalResource] Resource is not a file: ${uri.scheme}`);
-			return undefined;
-		}
-
-		// Ignore symbolic links
-		const stat = await workspace.fs.stat(uri);
-		if ((stat.type & FileType.SymbolicLink) !== 0) {
-			this.logger.trace(`[Repository][provideOriginalResource] Resource is a symbolic link: ${uri.toString()}`);
-			return undefined;
+			return;
 		}
 
 		// Ignore path that is not inside the current repository
@@ -1108,14 +1100,14 @@ export class Repository implements Disposable {
 		return this.run(Operation.Config(false), () => this.repository.config('unset', 'local', key));
 	}
 
-	log(options?: LogOptions & { silent?: boolean }, cancellationToken?: CancellationToken): Promise<Commit[]> {
+	log(options?: LogOptions & { silent?: boolean }): Promise<Commit[]> {
 		const showProgress = !options || options.silent !== true;
-		return this.run(Operation.Log(showProgress), () => this.repository.log(options, cancellationToken));
+		return this.run(Operation.Log(showProgress), () => this.repository.log(options));
 	}
 
-	logFile(uri: Uri, options?: LogFileOptions, cancellationToken?: CancellationToken): Promise<Commit[]> {
+	logFile(uri: Uri, options?: LogFileOptions): Promise<Commit[]> {
 		// TODO: This probably needs per-uri granularity
-		return this.run(Operation.LogFile, () => this.repository.logFile(uri, options, cancellationToken));
+		return this.run(Operation.LogFile, () => this.repository.logFile(uri, options));
 	}
 
 	@throttle
@@ -1405,29 +1397,9 @@ export class Repository implements Disposable {
 
 				if (toClean.length > 0) {
 					if (discardUntrackedChangesToTrash) {
-						try {
-							// Attempt to move the first resource to the recycle bin/trash to check
-							// if it is supported. If it fails, we show a confirmation dialog and
-							// fall back to deletion.
-							await workspace.fs.delete(Uri.file(toClean[0]), { useTrash: true });
-
-							const limiter = new Limiter<void>(5);
-							await Promise.all(toClean.slice(1).map(fsPath => limiter.queue(
-								async () => await workspace.fs.delete(Uri.file(fsPath), { useTrash: true }))));
-						} catch {
-							const message = isWindows
-								? l10n.t('Failed to delete using the Recycle Bin. Do you want to permanently delete instead?')
-								: l10n.t('Failed to delete using the Trash. Do you want to permanently delete instead?');
-							const primaryAction = toClean.length === 1
-								? l10n.t('Delete File')
-								: l10n.t('Delete All {0} Files', resources.length);
-
-							const result = await window.showWarningMessage(message, { modal: true }, primaryAction);
-							if (result === primaryAction) {
-								// Delete permanently
-								await this.repository.clean(toClean);
-							}
-						}
+						const limiter = new Limiter<void>(5);
+						await Promise.all(toClean.map(fsPath => limiter.queue(
+							async () => await workspace.fs.delete(Uri.file(fsPath), { useTrash: true }))));
 					} else {
 						await this.repository.clean(toClean);
 					}
@@ -1731,10 +1703,6 @@ export class Repository implements Disposable {
 
 	async getCommit(ref: string): Promise<Commit> {
 		return await this.repository.getCommit(ref);
-	}
-
-	async showCommit(ref: string): Promise<string> {
-		return await this.run(Operation.Show, () => this.repository.showCommit(ref));
 	}
 
 	async getEmptyTree(): Promise<string> {
@@ -2844,20 +2812,8 @@ export class StagedResourceQuickDiffProvider implements QuickDiffProvider {
 		private readonly logger: LogOutputChannel
 	) { }
 
-	async provideOriginalResource(uri: Uri): Promise<Uri | undefined> {
+	provideOriginalResource(uri: Uri): Uri | undefined {
 		this.logger.trace(`[StagedResourceQuickDiffProvider][provideOriginalResource] Resource: ${uri.toString()}`);
-
-		if (uri.scheme !== 'file') {
-			this.logger.trace(`[StagedResourceQuickDiffProvider][provideOriginalResource] Resource is not a file: ${uri.scheme}`);
-			return undefined;
-		}
-
-		// Ignore symbolic links
-		const stat = await workspace.fs.stat(uri);
-		if ((stat.type & FileType.SymbolicLink) !== 0) {
-			this.logger.trace(`[StagedResourceQuickDiffProvider][provideOriginalResource] Resource is a symbolic link: ${uri.toString()}`);
-			return undefined;
-		}
 
 		// Ignore resources that are not in the index group
 		if (!this._repository.indexGroup.resourceStates.some(r => pathEquals(r.resourceUri.fsPath, uri.fsPath))) {

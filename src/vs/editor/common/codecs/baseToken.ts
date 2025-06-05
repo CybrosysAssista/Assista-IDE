@@ -86,11 +86,8 @@ export abstract class BaseToken<TText extends string = string> {
 	/**
 	 * Render a list of tokens into a string.
 	 */
-	public static render(
-		tokens: readonly BaseToken[],
-		delimiter: string = '',
-	): string {
-		return tokens.map(pick('text')).join(delimiter);
+	public static render(tokens: readonly BaseToken[]): string {
+		return tokens.map(pick('text')).join('');
 	}
 
 	/**

@@ -137,17 +137,7 @@ export class GitHubAuthenticationProvider implements vscode.AuthenticationProvid
 
 		this._disposable = vscode.Disposable.from(
 			this._telemetryReporter,
-			vscode.authentication.registerAuthenticationProvider(
-				type,
-				this._githubServer.friendlyName,
-				this,
-				{
-					supportsMultipleAccounts: true,
-					supportedIssuers: [
-						ghesUri ?? vscode.Uri.parse('https://github.com/login/oauth')
-					]
-				}
-			),
+			vscode.authentication.registerAuthenticationProvider(type, this._githubServer.friendlyName, this, { supportsMultipleAccounts: true }),
 			this.context.secrets.onDidChange(() => this.checkForUpdates())
 		);
 	}

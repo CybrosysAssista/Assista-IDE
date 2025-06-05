@@ -40,8 +40,6 @@ export interface IMcpResolveConnectionOptions {
 	definitionRef: McpDefinitionReference;
 	/** If set, the user will be asked to trust the collection even if they untrusted it previously */
 	forceTrust?: boolean;
-	/** If set, try to launch with debugging when dev mode is configured */
-	debug?: boolean;
 }
 
 export interface IMcpRegistry {
@@ -51,12 +49,12 @@ export interface IMcpRegistry {
 	readonly onDidChangeInputs: Event<void>;
 
 	readonly collections: IObservable<readonly McpCollectionDefinition[]>;
-	readonly delegates: IObservable<readonly IMcpHostDelegate[]>;
+	readonly delegates: readonly IMcpHostDelegate[];
 	/** Whether there are new collections that can be resolved with a discover() call */
 	readonly lazyCollectionState: IObservable<LazyCollectionState>;
 
-	/** Helper function to observe a definition by its reference. */
-	getServerDefinition(collectionRef: McpDefinitionReference, definitionRef: McpDefinitionReference): IObservable<{ server: McpServerDefinition | undefined; collection: McpCollectionDefinition | undefined }>;
+	/** Gets the prefix that should be applied to a collection's tools in order to avoid ID conflicts */
+	collectionToolPrefix(collection: McpCollectionReference): IObservable<string>;
 
 	/** Discover new collections, returning newly-discovered ones. */
 	discoverCollections(): Promise<McpCollectionDefinition[]>;

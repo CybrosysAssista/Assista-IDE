@@ -564,8 +564,7 @@ export class ChatEditingModifiedNotebookEntry extends AbstractChatEditingModifie
 		};
 
 		this._applyEditsSync(async () => {
-			edits.map((edit, idx) => {
-				const last = isLastEdits && idx === edits.length - 1;
+			edits.map(edit => {
 				if (TextEdit.isTextEdit(edit)) {
 					// Possible we're getting the raw content for the notebook.
 					if (isEqual(resource, this.modifiedModel.uri)) {
@@ -578,7 +577,7 @@ export class ChatEditingModifiedNotebookEntry extends AbstractChatEditingModifie
 							finishPreviousCells();
 							this.editedCells.add(resource);
 						}
-						cellEntry?.acceptAgentEdits([edit], last, responseModel);
+						cellEntry?.acceptAgentEdits([edit], isLastEdits, responseModel);
 					}
 				} else {
 					// If we notebook edits, its impossible to get text edits for the notebook uri.

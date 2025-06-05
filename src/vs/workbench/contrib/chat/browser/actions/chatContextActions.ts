@@ -3,15 +3,14 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { DeferredPromise, isThenable } from '../../../../../base/common/async.js';
+import { DeferredPromise, isThenable, raceCancellationError } from '../../../../../base/common/async.js';
 import { CancellationTokenSource } from '../../../../../base/common/cancellation.js';
 import { Codicon } from '../../../../../base/common/codicons.js';
 import { KeyCode, KeyMod } from '../../../../../base/common/keyCodes.js';
-import { DisposableStore, toDisposable } from '../../../../../base/common/lifecycle.js';
+import { DisposableStore } from '../../../../../base/common/lifecycle.js';
 import { Schemas } from '../../../../../base/common/network.js';
-import { autorun, observableValue } from '../../../../../base/common/observable.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
-import { isObject } from '../../../../../base/common/types.js';
+import { assertType, isObject } from '../../../../../base/common/types.js';
 import { URI } from '../../../../../base/common/uri.js';
 import { ServicesAccessor } from '../../../../../editor/browser/editorExtensions.js';
 import { Range } from '../../../../../editor/common/core/range.js';
@@ -40,10 +39,10 @@ import { ChatContextKeys } from '../../common/chatContextKeys.js';
 import { IChatRequestVariableEntry, OmittedState } from '../../common/chatModel.js';
 import { ChatAgentLocation } from '../../common/constants.js';
 import { IChatWidget, IChatWidgetService, IQuickChatService, showChatView } from '../chat.js';
-import { IChatContextPickerItem, IChatContextPickService, IChatContextValueItem, isChatContextPickerPickItem } from '../chatContextPickService.js';
 import { isQuickChat } from '../chatWidget.js';
 import { resizeImage } from '../imageUtils.js';
 import { CHAT_CATEGORY } from './chatActions.js';
+import { IChatContextValueItem, IChatContextPickService, IChatContextPickerItem, isChatContextPickerPickItem } from '../chatContextPickService.js';
 import { registerPromptActions } from './promptActions/index.js';
 
 export function registerChatContextActions() {
@@ -55,30 +54,8 @@ export function registerChatContextActions() {
 	registerPromptActions();
 }
 
-async function withChatView(accessor: ServicesAccessor): Promise<IChatWidget | undefined> {
-	const viewsService = accessor.get(IViewsService);
-	const chatWidgetService = accessor.get(IChatWidgetService);
-
-	if (chatWidgetService.lastFocusedWidget) {
-		return chatWidgetService.lastFocusedWidget;
-	}
-	return showChatView(viewsService);
-}
-
 abstract class AttachResourceAction extends Action2 {
-
-	override async run(accessor: ServicesAccessor, ...args: any[]): Promise<void> {
-		const instaService = accessor.get(IInstantiationService);
-		const widget = await instaService.invokeFunction(withChatView);
-		if (!widget) {
-			return;
-		}
-		return instaService.invokeFunction(this.runWithWidget.bind(this), widget, ...args);
-	}
-
-	abstract runWithWidget(accessor: ServicesAccessor, widget: IChatWidget, ...args: any[]): Promise<void>;
-
-	protected _getResources(accessor: ServicesAccessor, ...args: any[]): URI[] {
+	getResources(accessor: ServicesAccessor, ...args: any[]): URI[] {
 		const editorService = accessor.get(IEditorService);
 
 		const contexts = Array.isArray(args[1]) ? args[1] : [args[0]];
@@ -123,11 +100,13 @@ class AttachFileToChatAction extends AttachResourceAction {
 		});
 	}
 
-	override async runWithWidget(accessor: ServicesAccessor, widget: IChatWidget, ...args: any[]): Promise<void> {
-		const files = this._getResources(accessor, ...args);
+	override async run(accessor: ServicesAccessor, ...args: any[]): Promise<void> {
+		const viewsService = accessor.get(IViewsService);
+		const files = this.getResources(accessor, ...args);
 		if (!files.length) {
 			return;
 		}
+		const widget = await showChatView(viewsService);
 		if (widget) {
 			widget.focusInput();
 			for (const file of files) {
@@ -150,11 +129,14 @@ class AttachFolderToChatAction extends AttachResourceAction {
 		});
 	}
 
-	override async runWithWidget(accessor: ServicesAccessor, widget: IChatWidget, ...args: any[]): Promise<void> {
-		const folders = this._getResources(accessor, ...args);
+	override async run(accessor: ServicesAccessor, ...args: any[]): Promise<void> {
+		const viewsService = accessor.get(IViewsService);
+
+		const folders = this.getResources(accessor, ...args);
 		if (!folders.length) {
 			return;
 		}
+		const widget = await showChatView(viewsService);
 		if (widget) {
 			widget.focusInput();
 			for (const folder of folders) {
@@ -179,8 +161,9 @@ class AttachSelectionToChatAction extends Action2 {
 
 	override async run(accessor: ServicesAccessor, ...args: any[]): Promise<void> {
 		const editorService = accessor.get(IEditorService);
+		const viewsService = accessor.get(IViewsService);
 
-		const widget = await accessor.get(IInstantiationService).invokeFunction(withChatView);
+		const widget = await showChatView(viewsService);
 		if (!widget) {
 			return;
 		}
@@ -246,7 +229,7 @@ export class AttachSearchResultAction extends Action2 {
 	}
 	async run(accessor: ServicesAccessor) {
 		const logService = accessor.get(ILogService);
-		const widget = await accessor.get(IInstantiationService).invokeFunction(withChatView);
+		const widget = await showChatView(accessor.get(IViewsService));
 
 		if (!widget) {
 			logService.trace('InsertSearchResultAction: no chat view available');
@@ -494,13 +477,8 @@ export class AttachContextAction extends Action2 {
 
 		const qp = store.add(quickInputService.createQuickPick({ useSeparators: true }));
 
-		const cts = new CancellationTokenSource();
-		store.add(qp.onDidHide(() => cts.cancel()));
-		store.add(toDisposable(() => cts.dispose(true)));
-
 		qp.placeholder = pickerConfig.placeholder;
 		qp.matchOnDescription = true;
-		qp.matchOnDetail = true;
 		// qp.ignoreFocusOut = true;
 		qp.canAcceptInBackground = true;
 		qp.busy = true;
@@ -514,33 +492,37 @@ export class AttachContextAction extends Action2 {
 			qp.items = items;
 			qp.busy = false;
 		} else {
-			const query = observableValue<string>('attachContext.query', qp.value);
-			store.add(qp.onDidChangeValue(() => query.set(qp.value, undefined)));
 
-			const picksObservable = pickerConfig.picks(query, cts.token);
-			store.add(autorun(reader => {
-				const { busy, picks } = picksObservable.read(reader);
-				qp.items = ([] as QuickPickItem[]).concat(picks, extraPicks);
-				qp.busy = busy;
-			}));
-		}
+			let cts: CancellationTokenSource | undefined;
 
-		if (cts.token.isCancellationRequested) {
-			return true; // picker got hidden already
+			const update = async () => {
+				assertType(typeof pickerConfig.picks === 'function');
+
+				if (cts) {
+					cts.cancel();
+					store.delete(cts);
+				}
+				cts = store.add(new CancellationTokenSource());
+
+				try {
+					qp.busy = true;
+					const items = await raceCancellationError(pickerConfig.picks(qp.value, cts.token), cts.token);
+					qp.items = ([] as QuickPickItem[]).concat(items, extraPicks);
+				} finally {
+					qp.busy = false;
+				}
+			};
+
+			store.add(qp.onDidChangeValue(update));
+			update();
 		}
 
 		const defer = new DeferredPromise<boolean>();
-		const addPromises: Promise<void>[] = [];
 
 		store.add(qp.onDidAccept(e => {
 			const [selected] = qp.selectedItems;
 			if (isChatContextPickerPickItem(selected)) {
-				const attachment = selected.asAttachment();
-				if (isThenable(attachment)) {
-					addPromises.push(attachment.then(v => widget.attachmentModel.addContext(v)));
-				} else {
-					widget.attachmentModel.addContext(attachment);
-				}
+				widget.attachmentModel.addContext(selected.asAttachment());
 			}
 			if (selected === goBackItem) {
 				defer.complete(false);
@@ -555,10 +537,7 @@ export class AttachContextAction extends Action2 {
 		}));
 
 		try {
-			const result = await defer.p;
-			qp.busy = true; // if still visible
-			await Promise.all(addPromises);
-			return result;
+			return await defer.p;
 		} finally {
 			store.dispose();
 		}

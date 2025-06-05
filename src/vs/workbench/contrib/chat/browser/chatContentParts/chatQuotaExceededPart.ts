@@ -9,7 +9,7 @@ import { WorkbenchActionExecutedClassification, WorkbenchActionExecutedEvent } f
 import { Codicon } from '../../../../../base/common/codicons.js';
 import { Emitter } from '../../../../../base/common/event.js';
 import { MarkdownString } from '../../../../../base/common/htmlContent.js';
-import { Disposable, IDisposable } from '../../../../../base/common/lifecycle.js';
+import { Disposable } from '../../../../../base/common/lifecycle.js';
 import { ThemeIcon } from '../../../../../base/common/themables.js';
 import { assertType } from '../../../../../base/common/types.js';
 import { MarkdownRenderer } from '../../../../../editor/browser/widget/markdownRenderer/browser/markdownRenderer.js';
@@ -19,7 +19,7 @@ import { ITelemetryService } from '../../../../../platform/telemetry/common/tele
 import { defaultButtonStyles } from '../../../../../platform/theme/browser/defaultStyles.js';
 import { asCssVariable, textLinkForeground } from '../../../../../platform/theme/common/colorRegistry.js';
 import { ChatEntitlement, IChatEntitlementService } from '../../common/chatEntitlementService.js';
-import { IChatErrorDetailsPart, IChatRendererContent, IChatResponseViewModel } from '../../common/chatViewModel.js';
+import { IChatResponseViewModel } from '../../common/chatViewModel.js';
 import { IChatWidgetService } from '../chat.js';
 import { IChatContentPart } from './chatContentParts.js';
 
@@ -43,7 +43,6 @@ export class ChatQuotaExceededPart extends Disposable implements IChatContentPar
 
 	constructor(
 		element: IChatResponseViewModel,
-		private readonly content: IChatErrorDetailsPart,
 		renderer: MarkdownRenderer,
 		@IChatWidgetService chatWidgetService: IChatWidgetService,
 		@ICommandService commandService: ICommandService,
@@ -69,7 +68,7 @@ export class ChatQuotaExceededPart extends Disposable implements IChatContentPar
 			case ChatEntitlement.ProPlus:
 				button1Label = localize('enableAdditionalUsage', "Manage paid premium requests");
 				break;
-			case ChatEntitlement.Free:
+			case ChatEntitlement.Limited:
 				button1Label = localize('upgradeToCopilotPro', "Upgrade to Copilot Pro");
 				break;
 			default:
@@ -118,7 +117,7 @@ export class ChatQuotaExceededPart extends Disposable implements IChatContentPar
 			button1.label = button1Label;
 			button1.element.classList.add('chat-quota-error-button');
 			this._register(button1.onDidClick(async () => {
-				const commandId = chatEntitlementService.entitlement === ChatEntitlement.Free ? 'workbench.action.chat.upgradePlan' : 'workbench.action.chat.manageOverages';
+				const commandId = chatEntitlementService.entitlement === ChatEntitlement.Limited ? 'workbench.action.chat.upgradePlan' : 'workbench.action.chat.manageOverages';
 				telemetryService.publicLog2<WorkbenchActionExecutedEvent, WorkbenchActionExecutedClassification>('workbenchActionExecuted', { id: commandId, from: 'chat-response' });
 				await commandService.executeCommand(commandId);
 
@@ -131,11 +130,8 @@ export class ChatQuotaExceededPart extends Disposable implements IChatContentPar
 		addWaitWarningIfNeeded();
 	}
 
-	hasSameContent(other: IChatRendererContent): boolean {
-		return other.kind === this.content.kind && !!other.errorDetails.isQuotaExceeded;
-	}
-
-	addDisposable(disposable: IDisposable): void {
-		this._register(disposable);
+	hasSameContent(other: unknown): boolean {
+		// Not currently used
+		return true;
 	}
 }

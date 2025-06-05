@@ -49,6 +49,8 @@ export class ChatAttachmentModel extends Disposable {
 		return Array.from(this._attachments.values());
 	}
 
+
+
 	get size(): number {
 		return this._attachments.size;
 	}
@@ -96,18 +98,18 @@ export class ChatAttachmentModel extends Disposable {
 
 	addContext(...attachments: IChatRequestVariableEntry[]) {
 		attachments = attachments.filter(attachment => !this._attachments.has(attachment.id));
-		this.updateContext(Iterable.empty(), attachments);
+		this.updateContent(Iterable.empty(), attachments);
 	}
 
 	clearAndSetContext(...attachments: IChatRequestVariableEntry[]) {
-		this.updateContext(Array.from(this._attachments.keys()), attachments);
+		this.updateContent(Array.from(this._attachments.keys()), attachments);
 	}
 
 	delete(...variableEntryIds: string[]) {
-		this.updateContext(variableEntryIds, Iterable.empty());
+		this.updateContent(variableEntryIds, Iterable.empty());
 	}
 
-	updateContext(toDelete: Iterable<string>, upsert: Iterable<IChatRequestVariableEntry>) {
+	updateContent(toDelete: Iterable<string>, upsert: Iterable<IChatRequestVariableEntry>) {
 		const deleted: string[] = [];
 		const added: IChatRequestVariableEntry[] = [];
 		const updated: IChatRequestVariableEntry[] = [];

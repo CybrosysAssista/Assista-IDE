@@ -9,7 +9,7 @@ import { ITextModel } from '../../../../../../../../editor/common/model.js';
 import { assertDefined } from '../../../../../../../../base/common/types.js';
 import { Disposable } from '../../../../../../../../base/common/lifecycle.js';
 import { ObjectCache } from '../../../../../../../../base/common/objectCache.js';
-import { INSTRUCTIONS_LANGUAGE_ID, MODE_LANGUAGE_ID, PROMPT_LANGUAGE_ID } from '../../../constants.js';
+import { INSTRUCTIONS_LANGUAGE_ID, PROMPT_LANGUAGE_ID } from '../../../constants.js';
 import { IModelService } from '../../../../../../../../editor/common/services/model.js';
 import { PromptsConfig } from '../../../../../../../../platform/prompts/common/config.js';
 import { IEditorService } from '../../../../../../../services/editor/common/editorService.js';
@@ -115,7 +115,7 @@ export abstract class ProviderInstanceManagerBase<TInstance extends ProviderInst
 
 				// if the language is changed away from `prompt` or `instructions`,
 				// remove and dispose provider for this model
-				if (isPromptFile(oldLanguageId)) {
+				if (isPromptOrInstructionsFile(oldLanguageId)) {
 					this.instances.remove(model, true);
 					return;
 				}
@@ -145,16 +145,13 @@ export abstract class ProviderInstanceManagerBase<TInstance extends ProviderInst
 }
 
 /**
- * Check if provided language ID is one of the prompt file languages.
+ * Check if provided language ID is either
+ * the `prompt` or `instructions` one.
  */
-const isPromptFile = (
+const isPromptOrInstructionsFile = (
 	languageId: string,
 ): boolean => {
-	return [
-		PROMPT_LANGUAGE_ID,
-		INSTRUCTIONS_LANGUAGE_ID,
-		MODE_LANGUAGE_ID,
-	].includes(languageId);
+	return (languageId === PROMPT_LANGUAGE_ID) || (languageId === INSTRUCTIONS_LANGUAGE_ID);
 };
 
 /**
@@ -172,7 +169,7 @@ const isPromptFileModel = (
 		return false;
 	}
 
-	if (isPromptFile(model.getLanguageId()) === false) {
+	if (isPromptOrInstructionsFile(model.getLanguageId()) === false) {
 		return false;
 	}
 

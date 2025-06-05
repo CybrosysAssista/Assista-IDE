@@ -646,20 +646,21 @@ export class TimelinePane extends ViewPane {
 		let response: Timeline | undefined;
 		try {
 			response = await this.progressService.withProgress({ location: this.id }, () => request.result);
-		} catch {
-			// Ignore
 		}
-
-		// If the request was cancelled then it was already deleted from the pendingRequests map
-		if (!request.tokenSource.token.isCancellationRequested) {
+		finally {
 			this.pendingRequests.get(request.source)?.dispose();
 			this.pendingRequests.delete(request.source);
 		}
 
-		if (response === undefined || request.uri !== this.uri) {
+		if (
+			response === undefined ||
+			request.tokenSource.token.isCancellationRequested ||
+			request.uri !== this.uri
+		) {
 			if (this.pendingRequests.size === 0 && this._pendingRefresh) {
 				this.refresh();
 			}
+
 			return;
 		}
 
@@ -1188,7 +1189,8 @@ class TimelineTreeRenderer implements ITreeRenderer<TreeElement, FuzzyScore, Tim
 	renderElement(
 		node: ITreeNode<TreeElement, FuzzyScore>,
 		index: number,
-		template: TimelineElementTemplate
+		template: TimelineElementTemplate,
+		height: number | undefined
 	): void {
 		template.reset();
 
@@ -1240,7 +1242,7 @@ class TimelineTreeRenderer implements ITreeRenderer<TreeElement, FuzzyScore, Tim
 		}
 	}
 
-	disposeElement(element: ITreeNode<TreeElement, FuzzyScore>, index: number, templateData: TimelineElementTemplate): void {
+	disposeElement(element: ITreeNode<TreeElement, FuzzyScore>, index: number, templateData: TimelineElementTemplate, height: number | undefined): void {
 		templateData.actionBar.actionRunner.dispose();
 	}
 

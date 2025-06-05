@@ -17,14 +17,15 @@ import { ensureNoDisposablesAreLeakedInTestSuite } from '../../../../../base/tes
 suite('CompositeToken', () => {
 	ensureNoDisposablesAreLeakedInTestSuite();
 
-	/**
-	 * A test token that extends the abstract {@link CompositeToken}
-	 * class which cannot be instantiated directly.
-	 */
-	class TestCompositeToken extends CompositeToken<BaseToken[]> {
+	class TestToken extends CompositeToken<BaseToken[]> {
+		constructor(
+			tokens: BaseToken[],
+		) {
+			super(tokens);
+		}
 
 		public override toString(): string {
-			const tokenStrings = this.children.map((token) => {
+			const tokenStrings = this.tokens.map((token) => {
 				return token.toString();
 			});
 
@@ -36,7 +37,7 @@ suite('CompositeToken', () => {
 		suite('• infers range from the list of tokens', () => {
 			test('• one token', () => {
 				const range = randomRange();
-				const token = new TestCompositeToken([
+				const token = new TestToken([
 					new Word(
 						range,
 						'word',
@@ -51,7 +52,7 @@ suite('CompositeToken', () => {
 
 			test('• multiple tokens', () => {
 				const tokens = randomTokens();
-				const token = new TestCompositeToken(tokens);
+				const token = new TestToken(tokens);
 
 				const expectedRange = Range.fromPositions(
 					tokens[0].range.getStartPosition(),
@@ -66,21 +67,21 @@ suite('CompositeToken', () => {
 
 			test('• throws if no tokens provided', () => {
 				assert.throws(() => {
-					new TestCompositeToken([]);
+					new TestToken([]);
 				});
 			});
 		});
 
 		test('• throws if no tokens provided', () => {
 			assert.throws(() => {
-				new TestCompositeToken([]);
+				new TestToken([]);
 			});
 		});
 	});
 
 	test('• text', () => {
 		const tokens = randomTokens();
-		const token = new TestCompositeToken(tokens);
+		const token = new TestToken(tokens);
 
 		assert.strictEqual(
 			token.text,
@@ -91,22 +92,28 @@ suite('CompositeToken', () => {
 
 	test('• tokens', () => {
 		const tokens = randomTokens();
-		const token = new TestCompositeToken(tokens);
+		const token = new TestToken(tokens);
 
 		for (let i = 0; i < tokens.length; i++) {
 			assert(
-				token.children[i].equals(tokens[i]),
-				`Token #${i} must be '${tokens[i]}', got '${token.children[i]}'.`,
+				token.tokens[i].equals(tokens[i]),
+				`Token #${i} must be '${tokens[i]}', got '${token.tokens[i]}'.`,
 			);
 		}
+
+		assert.strictEqual(
+			token.tokens,
+			tokens,
+			'Must return reference to the same token array.',
+		);
 	});
 
 	suite('• equals', () => {
 		suite('• true', () => {
 			test('• same child tokens', () => {
 				const tokens = randomTokens();
-				const token1 = new TestCompositeToken(tokens);
-				const token2 = new TestCompositeToken(tokens);
+				const token1 = new TestToken(tokens);
+				const token2 = new TestToken(tokens);
 
 				assert(
 					token1.equals(token2),
@@ -116,8 +123,8 @@ suite('CompositeToken', () => {
 
 			test('• copied child tokens', () => {
 				const tokens = randomTokens();
-				const token1 = new TestCompositeToken([...tokens]);
-				const token2 = new TestCompositeToken([...tokens]);
+				const token1 = new TestToken([...tokens]);
+				const token2 = new TestToken([...tokens]);
 
 				assert(
 					token1.equals(token2),
@@ -131,8 +138,8 @@ suite('CompositeToken', () => {
 				const tokens1 = cloneTokens(tokens);
 				const tokens2 = cloneTokens(tokens);
 
-				const token1 = new TestCompositeToken(tokens1);
-				const token2 = new TestCompositeToken(tokens2);
+				const token1 = new TestToken(tokens1);
+				const token2 = new TestToken(tokens2);
 
 				assert(
 					token1.equals(token2),
@@ -145,15 +152,15 @@ suite('CompositeToken', () => {
 
 				// ensure there is at least one composite token
 				const lastToken = tokens[tokens.length - 1];
-				const compositeToken = new TestCompositeToken(randomTokens(
+				const compositeToken = new TestToken(randomTokens(
 					randomInt(5, 2),
 					lastToken.range.endLineNumber,
 					lastToken.range.endColumn,
 				));
 				tokens.push(compositeToken);
 
-				const token1 = new TestCompositeToken([...tokens]);
-				const token2 = new TestCompositeToken([...tokens]);
+				const token1 = new TestToken([...tokens]);
+				const token2 = new TestToken([...tokens]);
 
 				assert(
 					token1.equals(token2),
@@ -164,8 +171,8 @@ suite('CompositeToken', () => {
 
 		suite('• false', () => {
 			test('• unknown children number', () => {
-				const token1 = new TestCompositeToken(randomTokens());
-				const token2 = new TestCompositeToken(randomTokens());
+				const token1 = new TestToken(randomTokens());
+				const token2 = new TestToken(randomTokens());
 
 				assert(
 					token1.equals(token2) === false,
@@ -183,8 +190,8 @@ suite('CompositeToken', () => {
 						: tokens2.pop();
 				}
 
-				const token1 = new TestCompositeToken(tokens1);
-				const token2 = new TestCompositeToken(tokens2);
+				const token1 = new TestToken(tokens1);
+				const token2 = new TestToken(tokens2);
 
 				assert(
 					token1.equals(token2) === false,
@@ -204,8 +211,8 @@ suite('CompositeToken', () => {
 					'Tokens must have the same number of children for this test to be valid.',
 				);
 
-				const token1 = new TestCompositeToken(tokens1);
-				const token2 = new TestCompositeToken(tokens2);
+				const token1 = new TestToken(tokens1);
+				const token2 = new TestToken(tokens2);
 
 				assert(
 					token1.equals(token2) === false,
@@ -218,12 +225,12 @@ suite('CompositeToken', () => {
 
 				// ensure there is at least one composite token
 				const lastToken = tokens[tokens.length - 1];
-				const compositeToken1 = new TestCompositeToken(randomTokens(
+				const compositeToken1 = new TestToken(randomTokens(
 					randomInt(3, 1),
 					lastToken.range.endLineNumber,
 					lastToken.range.endColumn,
 				));
-				const compositeToken2 = new TestCompositeToken(randomTokens(
+				const compositeToken2 = new TestToken(randomTokens(
 					randomInt(6, 4),
 					lastToken.range.endLineNumber,
 					lastToken.range.endColumn,
@@ -237,8 +244,8 @@ suite('CompositeToken', () => {
 				const tokens1 = [...tokens, compositeToken1];
 				const tokens2 = [...tokens, compositeToken2];
 
-				const token1 = new TestCompositeToken(tokens1);
-				const token2 = new TestCompositeToken(tokens2);
+				const token1 = new TestToken(tokens1);
+				const token2 = new TestToken(tokens2);
 
 				assert(
 					token1.equals(token2) === false,
