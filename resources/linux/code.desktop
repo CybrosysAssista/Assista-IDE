@@ -1,16 +1,17 @@
 [Desktop Entry]
-Name=Cybrosys Assista
-Comment=AI-Powered Code Editor
+Name=@@NAME_LONG@@
+Comment=Code Editing. Redefined.
 GenericName=Text Editor
-Exec=/usr/share/cybrosys-assista/cybrosys-assista --unity-launch %F
-Icon=cybrosys-assista
+Exec=@@EXEC@@ %F
+Icon=@@ICON@@
 Type=Application
 StartupNotify=false
-StartupWMClass=Cybrosys Assista
+StartupWMClass=@@NAME_SHORT@@
 Categories=TextEditor;Development;IDE;
-MimeType=text/plain;inode/directory;application/x-code-workspace;
+MimeType=application/x-@@NAME@@-workspace;
 Actions=new-empty-window;
-Keywords=cybrosys;assista;editor;ide;development;
+Keywords=vscode;
+
 
 [Desktop Action new-empty-window]
 Name=New Empty Window

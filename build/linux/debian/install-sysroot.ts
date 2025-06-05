@@ -172,7 +172,7 @@ export async function getVSCodeSysroot(arch: DebianArchString, isMusl: boolean =
 	}
 	console.log(`Installing ${arch} root image: ${sysroot}`);
 	fs.rmSync(sysroot, { recursive: true, force: true });
-	fs.mkdirSync(sysroot, { recursive: true });
+	fs.mkdirSync(sysroot);
 	await fetchUrl({
 		checksumSha256,
 		assetName: expectedName,

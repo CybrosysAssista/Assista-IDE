@@ -71,15 +71,13 @@ const CORE_TYPES = [
 	'Request',
 	'Response',
 	'Body',
-	'any',
-	'timeout',
+	'__type',
+	'__global',
 	'Performance',
 	'PerformanceMark',
 	'PerformanceObserver',
 	'ImportMeta',
 	'structuredClone',
-	'stackTraceLimit',
-	'captureStackTrace',
 
 	// webcrypto has been available since Node.js 19, but still live in dom.d.ts
 	'Crypto',
@@ -95,6 +93,7 @@ const CORE_TYPES = [
 	'value',
 	'done',
 	'DOMException',
+	'localStorage',
 	'WebSocket',
 ];
 
@@ -117,6 +116,22 @@ const RULES: IRule[] = [
 	{
 		target: '**/vs/**/test/**',
 		skip: true // -> skip all test files
+	},
+
+	// Common: vs/base/common/platform.ts
+	{
+		target: '**/vs/base/common/platform.ts',
+		allowedTypes: [
+			...CORE_TYPES,
+
+			// Safe access to postMessage() and friends
+			'MessageEvent',
+		],
+		disallowedTypes: NATIVE_TYPES,
+		disallowedDefinitions: [
+			'lib.dom.d.ts', // no DOM
+			'@types/node'	// no node.js
+		]
 	},
 
 	// Common: vs/base/common/async.ts
@@ -154,16 +169,64 @@ const RULES: IRule[] = [
 		]
 	},
 
-	// Common: vs/platform services that can access native types
+	// Common: vs/platform/environment/common/*
 	{
-		target: `**/vs/platform/{${[
-			'environment/common/*.ts',
-			'window/common/window.ts',
-			'native/common/native.ts',
-			'native/common/nativeHostService.ts',
-			'browserElements/common/browserElements.ts',
-			'browserElements/common/nativeBrowserElementsService.ts'
-		].join(',')}}`,
+		target: '**/vs/platform/environment/common/*.ts',
+		allowedTypes: CORE_TYPES,
+		disallowedTypes: [/* Ignore native types that are defined from here */],
+		disallowedDefinitions: [
+			'lib.dom.d.ts', // no DOM
+			'@types/node'	// no node.js
+		]
+	},
+
+	// Common: vs/platform/window/common/window.ts
+	{
+		target: '**/vs/platform/window/common/window.ts',
+		allowedTypes: CORE_TYPES,
+		disallowedTypes: [/* Ignore native types that are defined from here */],
+		disallowedDefinitions: [
+			'lib.dom.d.ts', // no DOM
+			'@types/node'	// no node.js
+		]
+	},
+
+	// Common: vs/platform/browserElements/common/browserElements.ts
+	{
+		target: '**/vs/platform/browserElements/common/browserElements.ts',
+		allowedTypes: CORE_TYPES,
+		disallowedTypes: [/* Ignore native types that are defined from here */],
+		disallowedDefinitions: [
+			'lib.dom.d.ts', // no DOM
+			'@types/node'	// no node.js
+		]
+	},
+
+	// Common: vs/platform/browserElements/common/nativeBrowserElementsService.ts
+	{
+		target: '**/vs/platform/browserElements/common/nativeBrowserElementsService.ts',
+		allowedTypes: CORE_TYPES,
+		disallowedTypes: [/* Ignore native types that are defined from here */],
+		disallowedDefinitions: [
+			'lib.dom.d.ts', // no DOM
+			'@types/node'	// no node.js
+		]
+	},
+
+	// Common: vs/platform/native/common/native.ts
+	{
+		target: '**/vs/platform/native/common/native.ts',
+		allowedTypes: CORE_TYPES,
+		disallowedTypes: [/* Ignore native types that are defined from here */],
+		disallowedDefinitions: [
+			'lib.dom.d.ts', // no DOM
+			'@types/node'	// no node.js
+		]
+	},
+
+	// Common: vs/platform/native/common/nativeHostService.ts
+	{
+		target: '**/vs/platform/native/common/nativeHostService.ts',
 		allowedTypes: CORE_TYPES,
 		disallowedTypes: [/* Ignore native types that are defined from here */],
 		disallowedDefinitions: [
@@ -188,16 +251,15 @@ const RULES: IRule[] = [
 		]
 	},
 
-	// Common: vs/base/parts/sandbox/electron-sandbox/preload{,-aux}.ts
+	// Common: vs/base/parts/sandbox/electron-sandbox/preload.ts
 	{
-		target: '**/vs/base/parts/sandbox/electron-sandbox/preload{,-aux}.ts',
+		target: '**/vs/base/parts/sandbox/electron-sandbox/preload.ts',
 		allowedTypes: [
 			...CORE_TYPES,
 
 			// Safe access to a very small subset of node.js
 			'process',
-			'NodeJS',
-			'__global'
+			'NodeJS'
 		],
 		disallowedTypes: NATIVE_TYPES,
 		disallowedDefinitions: [
@@ -219,11 +281,11 @@ const RULES: IRule[] = [
 	// Browser
 	{
 		target: '**/vs/**/browser/**',
-		allowedTypes: [
-			...CORE_TYPES,
-			'localStorage'
-		],
+		allowedTypes: CORE_TYPES,
 		disallowedTypes: NATIVE_TYPES,
+		allowedDefinitions: [
+			'@types/node/stream/consumers.d.ts' // node.js started to duplicate types from lib.dom.d.ts so we have to account for that
+		],
 		disallowedDefinitions: [
 			'@types/node'	// no node.js
 		]
@@ -257,10 +319,34 @@ const RULES: IRule[] = [
 		]
 	},
 
-	// Electron (main, utility)
+	// Electron (utility)
 	{
-		target: '**/vs/**/{electron-main,electron-utility}/**',
-		allowedTypes: CORE_TYPES,
+		target: '**/vs/**/electron-utility/**',
+		allowedTypes: [
+			...CORE_TYPES,
+
+			// --> types from electron.d.ts that duplicate from lib.dom.d.ts
+			'Event',
+			'Request'
+		],
+		disallowedTypes: [
+			'ipcMain' // not allowed, use validatedIpcMain instead
+		],
+		disallowedDefinitions: [
+			'lib.dom.d.ts'	// no DOM
+		]
+	},
+
+	// Electron (main)
+	{
+		target: '**/vs/**/electron-main/**',
+		allowedTypes: [
+			...CORE_TYPES,
+
+			// --> types from electron.d.ts that duplicate from lib.dom.d.ts
+			'Event',
+			'Request'
+		],
 		disallowedTypes: [
 			'ipcMain' // not allowed, use validatedIpcMain instead
 		],
@@ -298,11 +384,6 @@ function checkFile(program: ts.Program, sourceFile: ts.SourceFile, rule: IRule) 
 			return;
 		}
 
-		let text = symbol.getName();
-		if (rule.allowedTypes?.some(allowed => allowed === text)) {
-			return; // override
-		}
-
 		let _parentSymbol: any = symbol;
 
 		while (_parentSymbol.parent) {
@@ -310,7 +391,7 @@ function checkFile(program: ts.Program, sourceFile: ts.SourceFile, rule: IRule) 
 		}
 
 		const parentSymbol = _parentSymbol as ts.Symbol;
-		text = parentSymbol.getName();
+		const text = parentSymbol.getName();
 
 		if (rule.allowedTypes?.some(allowed => allowed === text)) {
 			return; // override
