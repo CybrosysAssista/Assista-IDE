@@ -314,7 +314,7 @@ async function handleDebugConfigCreation(workspacePath: string, panel: vscode.We
     }
 }
 
-async function findPythonInterpreter(workspacePath: string): Promise<string | undefined> {
+export async function findPythonInterpreter(workspacePath: string): Promise<string | undefined> {
     try {
         // Get all Python interpreters from VS Code
         const interpreters = await vscode.commands.executeCommand('python.interpreterPath');
@@ -360,7 +360,7 @@ async function findPythonInterpreter(workspacePath: string): Promise<string | un
     }
 }
 
-async function findOdooBin(workspacePath: string): Promise<string | undefined> {
+export async function findOdooBin(workspacePath: string): Promise<string | undefined> {
     // First try to find odoo-bin in the workspace
     const odooBinPath = path.join(workspacePath, 'odoo-bin');
     if (fs.existsSync(odooBinPath)) {
@@ -380,7 +380,7 @@ async function findOdooBin(workspacePath: string): Promise<string | undefined> {
     });
 }
 
-async function findOdooConf(workspacePath: string): Promise<string | undefined> {
+export async function findOdooConf(workspacePath: string): Promise<string | undefined> {
     // First try to find odoo.conf in the workspace
     const confPath = path.join(workspacePath, 'odoo.conf');
     if (fs.existsSync(confPath)) {

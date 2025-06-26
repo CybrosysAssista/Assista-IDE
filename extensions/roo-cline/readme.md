@@ -48,7 +48,7 @@ Once installed, you can:
 
 ---
 
-## 🔧 VS Code Integration
+## 🔧 Assista Integration
 
 - Right-click context menu support
 - AI-enhanced code lens overlays

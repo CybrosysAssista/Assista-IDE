@@ -136,7 +136,7 @@ export class StartupPageRunnerContribution extends Disposable implements IWorkbe
 				if (startupEditorSetting.value === 'readme') {
 					await this.openReadme();
 				} else if (startupEditorSetting.value === 'welcomePage' || startupEditorSetting.value === 'welcomePageInEmptyWorkbench') {
-					await this.openGettingStarted(true);
+					await this.openGettingStarted();
 				} else if (startupEditorSetting.value === 'terminal') {
 					this.commandService.executeCommand(TerminalCommandId.CreateTerminalEditor);
 				}
@@ -187,8 +187,8 @@ export class StartupPageRunnerContribution extends Disposable implements IWorkbe
 					this.editorService.openEditors(readmes.filter(readme => !isMarkDown(readme)).map(readme => ({ resource: readme }))),
 				]);
 			} else {
-				// If no readme is found, default to showing the welcome page.
-				await this.openGettingStarted();
+				// // If no readme is found, default to showing the welcome page.
+				// await this.openGettingStarted();
 			}
 		}
 	}

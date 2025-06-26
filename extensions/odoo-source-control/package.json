@@ -76,11 +76,7 @@
         }
       ],
       "editor/title": [
-        {
-          "command": "odoo-source-control.showWelcome",
-          "group": "navigation",
-          "when": "editorIsOpen"
-        },
+
         {
           "command": "odoo-source-control.pullSource",
           "group": "navigation",

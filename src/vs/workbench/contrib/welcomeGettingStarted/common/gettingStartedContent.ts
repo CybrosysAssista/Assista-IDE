@@ -4,6 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import themePickerContent from './media/theme_picker.js';
+import odooPullInfo from './media/odoo_pull_info.js';
+
 import themePickerSmallContent from './media/theme_picker_small.js';
 import notebookProfileContent from './media/notebookProfile.js';
 import { localize } from '../../../../nls.js';
@@ -19,7 +21,7 @@ interface IGettingStartedContentProvider {
 	(): string;
 }
 
-export const copilotSettingsMessage = localize({ key: 'settings', comment: ['{Locked="["}', '{Locked="]({0})"}', '{Locked="]({1})"}'] }, "GitHub Copilot Free, Pro and Pro+ may show [public code]({0}) suggestions and we may use your data for product improvement. You can change these [settings]({1}) at any time.", product.defaultChatAgent?.publicCodeMatchesUrl, product.defaultChatAgent?.manageSettingsUrl);
+export const copilotSettingsMessage = localize({ key: 'settings', comment: ['{Locked="["}', '{Locked="]({0})"}', '{Locked="]({1})"}'] }, "{0} Copilot Free, Pro and Pro+ may show [public code]({1}) suggestions and we may use your data for product improvement. You can change these [settings]({2}) at any time.", product.defaultChatAgent?.providerName, product.defaultChatAgent?.publicCodeMatchesUrl, product.defaultChatAgent?.manageSettingsUrl);
 
 class GettingStartedContentProviderRegistry {
 
@@ -54,6 +56,7 @@ export async function moduleToContent(resource: URI): Promise<string> {
 }
 
 gettingStartedContentRegistry.registerProvider('vs/workbench/contrib/welcomeGettingStarted/common/media/theme_picker', themePickerContent);
+gettingStartedContentRegistry.registerProvider('vs/workbench/contrib/welcomeGettingStarted/common/media/odoo_pull_info', odooPullInfo);
 gettingStartedContentRegistry.registerProvider('vs/workbench/contrib/welcomeGettingStarted/common/media/theme_picker_small', themePickerSmallContent);
 gettingStartedContentRegistry.registerProvider('vs/workbench/contrib/welcomeGettingStarted/common/media/notebookProfile', notebookProfileContent);
 // Register empty media for accessibility walkthrough
@@ -252,7 +255,7 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 			type: 'steps',
 			steps: [
 				createCopilotSetupStep('CopilotSetupSignedOut', CopilotSignedOutButton, 'chatEntitlementSignedOut', true),
-				createCopilotSetupStep('CopilotSetupComplete', CopilotCompleteButton, 'chatSetupInstalled && !chatSetupDisabled && (chatPlanPro || chatPlanProPlus || chatPlanBusiness || chatPlanEnterprise || chatPlanLimited)', false),
+				createCopilotSetupStep('CopilotSetupComplete', CopilotCompleteButton, 'chatSetupInstalled && !chatSetupDisabled && (chatPlanPro || chatPlanProPlus || chatPlanBusiness || chatPlanEnterprise || chatPlanFree)', false),
 				createCopilotSetupStep('CopilotSetupSignedIn', CopilotSignedInButton, '!chatEntitlementSignedOut && (!chatSetupInstalled || chatSetupDisabled || chatPlanCanSignUp)', true),
 				{
 					id: 'pickColorTheme',
@@ -282,25 +285,6 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 						type: 'svg', altText: 'Language extensions', path: 'languages.svg'
 					},
 				},
-				// Hidden in favor of copilot entry (to be revisited when copilot entry moves, if at all)
-				// {
-				// 	id: 'settings',
-				// 	title: localize('gettingStarted.settings.title', "Tune your settings"),
-				// 	description: localize('gettingStarted.settings.description.interpolated', "Customize every aspect of Assista and your extensions to your liking. Commonly used settings are listed first to get you started.\n{0}", Button(localize('tweakSettings', "Open Settings"), 'command:toSide:workbench.action.openSettings')),
-				// 	media: {
-				// 		type: 'svg', altText: 'Assista Settings', path: 'settings.svg'
-				// 	},
-				// },
-				// {
-				// 	id: 'settingsSync',
-				// 	title: localize('gettingStarted.settingsSync.title', "Sync settings across devices"),
-				// 	description: localize('gettingStarted.settingsSync.description.interpolated', "Keep your essential customizations backed up and updated across all your devices.\n{0}", Button(localize('enableSync', "Backup and Sync Settings"), 'command:workbench.userDataSync.actions.turnOn')),
-				// 	when: 'syncStatus != uninitialized',
-				// 	completionEvents: ['onEvent:sync-enabled'],
-				// 	media: {
-				// 		type: 'svg', altText: 'The "Turn on Sync" entry in the settings gear menu.', path: 'settingsSync.svg'
-				// 	},
-				// },
 				{
 					id: 'settingsAndSync',
 					title: localize('gettingStarted.settings.title', "Tune your settings"),
@@ -317,25 +301,6 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 					description: localize('gettingStarted.commandPalette.description.interpolated', "Run commands without reaching for your mouse to accomplish any task in Assista.\n{0}", Button(localize('commandPalette', "Open Command Palette"), 'command:workbench.action.showCommands')),
 					media: { type: 'svg', altText: 'Command Palette overlay for searching and executing commands.', path: 'commandPalette.svg' },
 				},
-				// Hidden in favor of copilot entry (to be revisited when copilot entry moves, if at all)
-				// {
-				// 	id: 'pickAFolderTask-Mac',
-				// 	title: localize('gettingStarted.setup.OpenFolder.title', "Open up your code"),
-				// 	description: localize('gettingStarted.setup.OpenFolder.description.interpolated', "You're all set to start coding. Open a project folder to get your files into Assista.\n{0}", Button(localize('pickFolder', "Pick a Folder"), 'command:workbench.action.files.openFileFolder')),
-				// 	when: 'isMac && workspaceFolderCount == 0',
-				// 	media: {
-				// 		type: 'svg', altText: 'Explorer view showing buttons for opening folder and cloning repository.', path: 'openFolder.svg'
-				// 	}
-				// },
-				// {
-				// 	id: 'pickAFolderTask-Other',
-				// 	title: localize('gettingStarted.setup.OpenFolder.title', "Open up your code"),
-				// 	description: localize('gettingStarted.setup.OpenFolder.description.interpolated', "You're all set to start coding. Open a project folder to get your files into Assista.\n{0}", Button(localize('pickFolder', "Pick a Folder"), 'command:workbench.action.files.openFolder')),
-				// 	when: '!isMac && workspaceFolderCount == 0',
-				// 	media: {
-				// 		type: 'svg', altText: 'Explorer view showing buttons for opening folder and cloning repository.', path: 'openFolder.svg'
-				// 	}
-				// },
 				{
 					id: 'quickOpen',
 					title: localize('gettingStarted.quickOpen.title', "Quickly navigate between your files"),
@@ -691,10 +656,10 @@ export const walkthroughs: GettingStartedWalkthroughContent = [
 				},
 				{
 					id: 'copilotSetup.inline',
-					title: localize('gettingStarted.nes.title', "Next Edit Suggestions"),
+					title: localize('gettingStarted.nes.title', "Next edit suggestions"),
 					description: localize('gettingStarted.nes.description', "Get code suggestions that predict your next edit."),
 					media: {
-						type: 'svg', altText: 'Next Edit Suggestions', path: 'ai-powered-suggestions.svg'
+						type: 'svg', altText: 'Next edit suggestions', path: 'ai-powered-suggestions.svg'
 					},
 				},
 				{

@@ -310,12 +310,12 @@
 - Improve display of long MCP tool arguments
 - Fix redundant ‘TASK RESUMPTION’ prompts (thanks @System233!)
 - Fix bug opening files when editor has no workspace root
-- Make the VS Code LM provider show the correct model information (thanks @QuinsZouls!)
+- Make the Assista LM provider show the correct model information (thanks @QuinsZouls!)
 - Fixes to make the focusInput command more reliable (thanks @hongzio!)
 - Better handling of aftercursor content in context mentions (thanks @elianiva!)
 - Support injecting environment variables in MCP config (thanks @NamesMT!)
 - Better handling of FakeAI “controller” object (thanks @wkordalski)
-- Remove unnecessary calculation from VS Code LM provider (thanks @d-oit!)
+- Remove unnecessary calculation from Assista LM provider (thanks @d-oit!)
 - Allow Amazon Bedrock Marketplace ARNs (thanks @mlopezr!)
 - Give better loading feedback on chat rows (thanks @elianiva!)
 - Performance improvements to task size calculations
@@ -684,7 +684,7 @@
 
 ## [3.8.3] - 2025-03-09
 
-- Fix VS Code LM API model picker truncation issue
+- Fix Assista LM API model picker truncation issue
 
 ## [3.8.2] - 2025-03-08
 
@@ -857,7 +857,7 @@
 ## [3.3.19] - 2025-02-12
 
 - Fix a bug where aborting in the middle of file writes would not revert the write
-- Honor the VS Code theme for dialog backgrounds
+- Honor the Assista theme for dialog backgrounds
 - Make it possible to clear out the default custom instructions for built-in modes
 - Add a help button that links to our new documentation site (which we would love help from the community to improve!)
 - Switch checkpoints logic to use a shadow git repository to work around issues with hot reloads and polluting existing repositories (thanks Cline for the inspiration!)
@@ -990,7 +990,7 @@
 
 ## [3.3.0]
 
-- Native VS Code code actions support with quick fixes and refactoring options
+- Native Assista code actions support with quick fixes and refactoring options
 - Modes can now request to switch to other modes when needed
 - Ask and Architect modes can now edit markdown files
 - Custom modes can now be restricted to specific file patterns (for example, a technical writer who can only edit markdown files 👋)
@@ -1055,11 +1055,11 @@ Join us at https://www.reddit.com/r/RooCode to share your custom modes and be pa
 ## [3.1.3]
 
 - Add auto-approve chat bar (thanks Cline!)
-- Fix bug with VS Code Language Models integration
+- Fix bug with Assista Language Models integration
 
 ## [3.1.2]
 
-- Experimental support for VS Code Language Models including Copilot (thanks @RaySinner / @julesmons!)
+- Experimental support for Assista Language Models including Copilot (thanks @RaySinner / @julesmons!)
 - Fix bug related to configuration profile switching (thanks @samhvw8!)
 - Improvements to fuzzy search in mentions, history, and model lists (thanks @samhvw8!)
 - PKCE support for Glama (thanks @punkpeye!)

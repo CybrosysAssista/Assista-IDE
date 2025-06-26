@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { findPythonInterpreter, findOdooBin, findOdooConf } from './configure';
 
 const execAsync = promisify(exec);
 
@@ -50,6 +51,8 @@ export async function handlePullSource() {
             await fs.promises.rm(versionPath, { recursive: true, force: true });
         }
 
+        let pullSuccess = false;
+        let versionPathResult = '';
         // Show progress
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
@@ -65,11 +68,8 @@ export async function handlePullSource() {
             try {
                 await execAsync(cloneCmd);
                 progress.report({ increment: 100, message: 'Clone completed' });
-
-                // Show success message
-                vscode.window.showInformationMessage(
-                    `Successfully pulled Odoo ${odooVersion} to ${versionPath}`
-                );
+                pullSuccess = true;
+                versionPathResult = versionPath;
 
                 // Update the workspace path in the welcome screen
                 const extension = vscode.extensions.getExtension('odoo-source-control');
@@ -103,6 +103,17 @@ export async function handlePullSource() {
                 return;
             }
         });
+
+        // After progress bar closes, show the info dialog if pull was successful
+        if (pullSuccess) {
+            const action = await vscode.window.showInformationMessage(
+                `Successfully pulled Odoo ${odooVersion} to ${versionPathResult}`,
+                'Open in Workspace Folder'
+            );
+            if (action === 'Open in Workspace Folder') {
+                await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(versionPathResult), true);
+            }
+        }
 
     } catch (error) {
         vscode.window.showErrorMessage(`Error: ${error}`);
@@ -226,11 +237,26 @@ export async function handleConfigDebugger() {
         if (!workspaceFolder) {
             throw new Error('No workspace folder found. Please open a folder first.');
         }
+        const workspacePath = workspaceFolder.uri.fsPath;
 
         // Create .vscode directory if it doesn't exist
-        const vscodePath = path.join(workspaceFolder.uri.fsPath, '.vscode');
+        const vscodePath = path.join(workspacePath, '.vscode');
         if (!fs.existsSync(vscodePath)) {
             await fs.promises.mkdir(vscodePath);
+        }
+
+        // Prompt for Python interpreter, odoo-bin, and odoo.conf
+        const pythonPath = await findPythonInterpreter(workspacePath);
+        if (!pythonPath) {
+            throw new Error('Could not find Python interpreter');
+        }
+        const odooBinPath = await findOdooBin(workspacePath);
+        if (!odooBinPath) {
+            throw new Error('Could not find odoo-bin');
+        }
+        const confPath = await findOdooConf(workspacePath);
+        if (!confPath) {
+            throw new Error('Could not find odoo.conf');
         }
 
         // Create launch.json
@@ -238,15 +264,14 @@ export async function handleConfigDebugger() {
             version: '0.2.0',
             configurations: [
                 {
-                    name: 'Odoo',
+                    name: 'Odoo Debug',
                     type: 'python',
                     request: 'launch',
-                    program: '${workspaceFolder}/odoo-bin',
-                    args: [
-                        '-c',
-                        '${workspaceFolder}/odoo.conf'
-                    ],
-                    console: 'integratedTerminal'
+                    program: odooBinPath,
+                    args: ['-c', confPath, '--dev=xml'],
+                    python: pythonPath,
+                    console: 'integratedTerminal',
+                    justMyCode: false
                 }
             ]
         };
