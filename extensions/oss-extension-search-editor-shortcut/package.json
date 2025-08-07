@@ -20,7 +20,7 @@
     ],
     "keybindings": [
       {
-        "command": "searchEditorShortcut.openSearchEditor",
+        "command": "workbench.action.searchOverlay",
         "key": "ctrl+shift+f",
         "when": "editorTextFocus || !editorFocus"
       }

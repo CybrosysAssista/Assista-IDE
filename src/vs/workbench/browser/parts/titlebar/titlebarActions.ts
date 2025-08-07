@@ -8,12 +8,16 @@ import { IConfigurationService } from '../../../../platform/configuration/common
 import { ServicesAccessor } from '../../../../platform/instantiation/common/instantiation.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { LayoutSettings } from '../../../services/layout/browser/layoutService.js';
-import { Action2, MenuId, registerAction2 } from '../../../../platform/actions/common/actions.js';
+import { Action2, MenuId, registerAction2, MenuRegistry } from '../../../../platform/actions/common/actions.js';
 import { ContextKeyExpr, ContextKeyExpression, IContextKeyService } from '../../../../platform/contextkey/common/contextkey.js';
 import { ACCOUNTS_ACTIVITY_ID, GLOBAL_ACTIVITY_ID } from '../../../common/activity.js';
 import { IAction } from '../../../../base/common/actions.js';
 import { IsMainWindowFullscreenContext, IsCompactTitleBarContext, TitleBarStyleContext, TitleBarVisibleContext } from '../../../common/contextkeys.js';
 import { CustomTitleBarVisibility, TitleBarSetting, TitlebarStyle } from '../../../../platform/window/common/window.js';
+import { ICommandService } from '../../../../platform/commands/common/commands.js';
+import { RESTART_SESSION_ID, STOP_ID } from '../../../contrib/debug/browser/debugCommands.js';
+import { IDebugService } from '../../../contrib/debug/common/debug.js';
+import { AssistaIcon } from '../../../../base/common/assistaIcons.js';
 
 // --- Context Menu Actions --- //
 
@@ -276,3 +280,92 @@ export const GLOBAL_ACTIVITY_TITLE_ACTION: IAction = {
 	enabled: true,
 	run: function (): void { }
 };
+
+// --- Run Action --- //
+
+class RunAction extends Action2 {
+	constructor() {
+		super({
+			id: 'workbench.action.run',
+			title: localize2('run', "Run"),
+			f1: true,
+			icon: AssistaIcon.run, // Use the play/run icon from codicons
+			menu: [
+				{
+					id: MenuId.TitleBar,
+					group: 'navigation', // Place in navigation group for always visible
+					order: 90, // High order to appear after search bar, before layout
+					when: ContextKeyExpr.equals('debugState', 'inactive')
+				}
+			]
+		});
+	}
+
+	async run(accessor: ServicesAccessor, ...args: any[]): Promise<void> {
+		const commandService = accessor.get(ICommandService);
+		const debugService = accessor.get(IDebugService);
+
+		// Check if there are any debug configurations available
+		const configManager = debugService.getConfigurationManager();
+		const configurations = configManager.getAllConfigurations();
+
+		if (configurations.length === 0) {
+			// No configurations found, show the debugger sidebar
+			await commandService.executeCommand('odoo-source-control.showDebuggerSidebar');
+		} else {
+			// Configurations found, start debugging normally
+			await commandService.executeCommand('workbench.action.debug.start');
+		}
+	}
+}
+
+registerAction2(RunAction);
+
+class DebugAction extends Action2 {
+	constructor() {
+		super({
+			id: 'workbench.action.debug',
+			title: localize2('debug', "Debug"),
+			f1: true,
+			icon: AssistaIcon.debugger, // Use the debugger icon from codicons
+			menu: [
+				{
+					id: MenuId.TitleBar,
+					group: 'navigation', // Place in navigation group for always visible
+					order: 91 // Right after Run
+				}
+			]
+		});
+	}
+
+	run(accessor: ServicesAccessor, ...args: any[]): void {
+		const commandService = accessor.get(ICommandService);
+		commandService.executeCommand('odoo-source-control.showDebuggerSidebar');
+	}
+}
+
+registerAction2(DebugAction);
+
+// --- Dynamic Debug Actions --- //
+
+MenuRegistry.appendMenuItem(MenuId.TitleBar, {
+	command: {
+		id: RESTART_SESSION_ID,
+		title: localize2('restart', 'Restart'),
+		icon: AssistaIcon.restart
+	},
+	when: ContextKeyExpr.notEquals('debugState', 'inactive'),
+	group: 'navigation',
+	order: 90
+});
+
+MenuRegistry.appendMenuItem(MenuId.TitleBar, {
+	command: {
+		id: STOP_ID,
+		title: localize2('stop', 'Stop'),
+		icon: AssistaIcon.stopDebugging
+	},
+	when: ContextKeyExpr.notEquals('debugState', 'inactive'),
+	group: 'navigation',
+	order: 91
+});

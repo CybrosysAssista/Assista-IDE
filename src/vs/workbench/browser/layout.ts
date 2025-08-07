@@ -2696,7 +2696,7 @@ class LayoutStateModel extends Disposable {
 		const workbenchState = this.contextService.getWorkbenchState();
 		LayoutStateKeys.SIDEBAR_SIZE.defaultValue = Math.min(300, mainContainerDimension.width / 4);
 		LayoutStateKeys.SIDEBAR_HIDDEN.defaultValue = workbenchState === WorkbenchState.EMPTY;
-		LayoutStateKeys.AUXILIARYBAR_SIZE.defaultValue = Math.min(300, mainContainerDimension.width / 4);
+		LayoutStateKeys.AUXILIARYBAR_SIZE.defaultValue = Math.min(400, mainContainerDimension.width / 4);
 		LayoutStateKeys.AUXILIARYBAR_HIDDEN.defaultValue = (() => {
 			switch (this.configurationService.getValue(WorkbenchLayoutSettings.AUXILIARYBAR_DEFAULT_VISIBILITY)) {
 				case 'visible':
@@ -2704,7 +2704,7 @@ class LayoutStateModel extends Disposable {
 				case 'visibleInWorkspace':
 					return workbenchState === WorkbenchState.EMPTY;
 				default:
-					return true;
+					return false;
 			}
 		})();
 		LayoutStateKeys.PANEL_SIZE.defaultValue = (this.stateCache.get(LayoutStateKeys.PANEL_POSITION.name) ?? isHorizontal(LayoutStateKeys.PANEL_POSITION.defaultValue)) ? mainContainerDimension.height / 3 : mainContainerDimension.width / 4;

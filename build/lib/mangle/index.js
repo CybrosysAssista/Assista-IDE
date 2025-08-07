@@ -355,7 +355,11 @@ class Mangler {
         this.config = config;
         this.renameWorkerPool = workerpool_1.default.pool(path_1.default.join(__dirname, 'renameWorker.js'), {
             maxWorkers: 4,
-            minWorkers: 'max'
+            minWorkers: 'max',
+            nodeWorker: 'process',
+            forkOpts: {
+                execArgv: ['--max-old-space-size=32768']
+            }
         });
     }
     async computeNewFileContents(strictImplicitPublicHandling) {

@@ -106,3 +106,9 @@
 .monaco-workbench .sidebar.pane-composite-part > .title.has-composite-bar > .title-actions .monaco-action-bar .action-item {
 	max-width: 150px;
 }
+.part.sidebar {
+	/* margin-right: 7px; */
+    border-radius: 8px;
+	/* width: calc(100% - 7px); */
+
+}

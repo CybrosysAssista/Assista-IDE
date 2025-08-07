@@ -1,0 +1,23 @@
+{
+  "name": "assista-midnight-theme",
+  "displayName": "Assista Midnight Theme",
+  "description": "Default theme for Assista IDE",
+  "version": "1.0.0",
+  "publisher": "cybrosys-assista-ltd",
+  "isBuiltin": true,
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Assista Midnight",
+        "uiTheme": "vs-dark",
+        "path": "./themes/assista-midnight-color-theme.json"
+      }
+    ]
+  }
+}

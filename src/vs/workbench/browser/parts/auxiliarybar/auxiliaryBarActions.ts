@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Codicon } from '../../../../base/common/codicons.js';
+import { AssistaIcon } from '../../../../base/common/assistaIcons.js';
 import { localize, localize2 } from '../../../../nls.js';
 import { Action2, MenuId, MenuRegistry, registerAction2 } from '../../../../platform/actions/common/actions.js';
 import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
@@ -19,10 +19,10 @@ import { KeyCode, KeyMod } from '../../../../base/common/keyCodes.js';
 import { SwitchCompositeViewAction } from '../compositeBarActions.js';
 import { closeIcon } from '../panel/panelActions.js';
 
-const auxiliaryBarRightIcon = registerIcon('auxiliarybar-right-layout-icon', Codicon.layoutSidebarRight, localize('toggleAuxiliaryIconRight', 'Icon to toggle the auxiliary bar off in its right position.'));
-const auxiliaryBarRightOffIcon = registerIcon('auxiliarybar-right-off-layout-icon', Codicon.layoutSidebarRightOff, localize('toggleAuxiliaryIconRightOn', 'Icon to toggle the auxiliary bar on in its right position.'));
-const auxiliaryBarLeftIcon = registerIcon('auxiliarybar-left-layout-icon', Codicon.layoutSidebarLeft, localize('toggleAuxiliaryIconLeft', 'Icon to toggle the auxiliary bar in its left position.'));
-const auxiliaryBarLeftOffIcon = registerIcon('auxiliarybar-left-off-layout-icon', Codicon.layoutSidebarLeftOff, localize('toggleAuxiliaryIconLeftOn', 'Icon to toggle the auxiliary bar on in its left position.'));
+const auxiliaryBarRightIcon = registerIcon('auxiliarybar-right-layout-icon', AssistaIcon.toggleSecondarySidebarOn, localize('toggleAuxiliaryIconRight', 'Icon to toggle the auxiliary bar off in its right position.'));
+const auxiliaryBarRightOffIcon = registerIcon('auxiliarybar-right-off-layout-icon', AssistaIcon.toggleSecondarySidebarOff, localize('toggleAuxiliaryIconRightOn', 'Icon to toggle the auxiliary bar on in its right position.'));
+const auxiliaryBarLeftIcon = registerIcon('auxiliarybar-left-layout-icon', AssistaIcon.toggleSecondarySidebarOn, localize('toggleAuxiliaryIconLeft', 'Icon to toggle the auxiliary bar in its left position.'));
+const auxiliaryBarLeftOffIcon = registerIcon('auxiliarybar-left-off-layout-icon', AssistaIcon.toggleSecondarySidebarOff, localize('toggleAuxiliaryIconLeftOn', 'Icon to toggle the auxiliary bar on in its left position.'));
 
 export class ToggleAuxiliaryBarAction extends Action2 {
 

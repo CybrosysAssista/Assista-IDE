@@ -4,7 +4,7 @@
 
 ## Features
 
-See [Git support in VS Code](https://code.visualstudio.com/docs/editor/versioncontrol#_git-support) to learn about the features of this extension.
+See [Git support in Assista](https://code.visualstudio.com/docs/editor/versioncontrol#_git-support) to learn about the features of this extension.
 
 ## API
 

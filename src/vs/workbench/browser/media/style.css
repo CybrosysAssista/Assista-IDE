@@ -198,6 +198,7 @@ body {
 	-moz-appearance: none;
 	/* Hides inner border from FF */
 	border: 1px solid;
+	border-radius:5px;
 }
 
 .monaco-workbench .select-container {
@@ -267,11 +268,12 @@ body {
 	height: 100%;
 	z-index: 15; /* make sure we are on top of the tree sticky scroll widget */
 	content: "";
+    border-radius: 7px;
 	pointer-events: none; /* enable click through */
 	outline: 1px solid; /* we still need to handle the empty tree or no focus item case */
 	outline-width: 1px;
 	outline-style: solid;
-	outline-offset: -1px;
+	outline-offset: -2px;
 	outline-color: var(--vscode-focusBorder);
 }
 
@@ -317,4 +319,7 @@ body {
 .monaco-workbench .monaco-action-bar:not(.vertical) .action-item .action-label:hover:not(.disabled) {
 	outline: 1px dashed var(--vscode-toolbar-hoverOutline);
 	outline-offset: -1px;
+}
+.monaco-inputbox{
+	border-radius:5px;
 }

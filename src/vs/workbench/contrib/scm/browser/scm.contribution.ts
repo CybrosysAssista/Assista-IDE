@@ -22,7 +22,7 @@ import { IViewContainersRegistry, ViewContainerLocation, Extensions as ViewConta
 import { SCMViewPaneContainer } from './scmViewPaneContainer.js';
 import { SyncDescriptor } from '../../../../platform/instantiation/common/descriptors.js';
 import { ModesRegistry } from '../../../../editor/common/languages/modesRegistry.js';
-import { Codicon } from '../../../../base/common/codicons.js';
+import { AssistaIcon } from '../../../../base/common/assistaIcons.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { ContextKeys, SCMViewPane } from './scmViewPane.js';
 import { RepositoryPicker, SCMViewService } from './scmViewService.js';
@@ -60,7 +60,7 @@ Registry.as<IWorkbenchContributionsRegistry>(WorkbenchExtensions.Workbench)
 registerEditorContribution(QuickDiffEditorController.ID,
 	QuickDiffEditorController, EditorContributionInstantiation.AfterFirstRender);
 
-const sourceControlViewIcon = registerIcon('source-control-view-icon', Codicon.sourceControl, localize('sourceControlViewIcon', 'View icon of the Source Control view.'));
+const sourceControlViewIcon = registerIcon('source-control-view-icon', AssistaIcon.sourceControl, localize('sourceControlViewIcon', 'View icon of the Source Control view.'));
 
 const viewContainer = Registry.as<IViewContainersRegistry>(ViewContainerExtensions.ViewContainersRegistry).registerViewContainer({
 	id: VIEWLET_ID,

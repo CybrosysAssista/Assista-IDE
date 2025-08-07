@@ -1,0 +1,23 @@
+{
+  "name": "assista-light-theme",
+  "displayName": "Assista Light Theme",
+  "description": "Theme for Assista IDE",
+  "version": "1.0.0",
+  "publisher": "cybrosys-assista-ltd",
+  "isBuiltin": true,
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Assista Light",
+        "uiTheme": "vs",
+        "path": "./themes/assista-light-color-theme.json"
+      }
+    ]
+  }
+}

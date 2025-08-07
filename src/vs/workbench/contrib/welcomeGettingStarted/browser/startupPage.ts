@@ -18,7 +18,7 @@ import { Disposable, DisposableStore } from '../../../../base/common/lifecycle.j
 import { IFileService } from '../../../../platform/files/common/files.js';
 import { joinPath } from '../../../../base/common/resources.js';
 import { IWorkbenchLayoutService } from '../../../services/layout/browser/layoutService.js';
-import { GettingStartedEditorOptions, GettingStartedInput, gettingStartedInputTypeId } from './gettingStartedInput.js';
+import { GettingStartedEditorOptions, GettingStartedInput } from './gettingStartedInput.js';
 import { IWorkbenchEnvironmentService } from '../../../services/environment/common/environmentService.js';
 import { IStorageService, StorageScope, StorageTarget } from '../../../../platform/storage/common/storage.js';
 import { getTelemetryLevel } from '../../../../platform/telemetry/common/telemetryUtils.js';
@@ -135,8 +135,8 @@ export class StartupPageRunnerContribution extends Disposable implements IWorkbe
 
 				if (startupEditorSetting.value === 'readme') {
 					await this.openReadme();
-				} else if (startupEditorSetting.value === 'welcomePage' || startupEditorSetting.value === 'welcomePageInEmptyWorkbench') {
-					await this.openGettingStarted();
+					// } else if (startupEditorSetting.value === 'welcomePage' || startupEditorSetting.value === 'welcomePageInEmptyWorkbench') {
+					// 	await this.openGettingStarted();
 				} else if (startupEditorSetting.value === 'terminal') {
 					this.commandService.executeCommand(TerminalCommandId.CreateTerminalEditor);
 				}
@@ -193,23 +193,23 @@ export class StartupPageRunnerContribution extends Disposable implements IWorkbe
 		}
 	}
 
-	private async openGettingStarted(showTelemetryNotice?: boolean) {
-		const startupEditorTypeID = gettingStartedInputTypeId;
-		const editor = this.editorService.activeEditor;
+	// private async openGettingStarted(showTelemetryNotice?: boolean) {
+	// 	const startupEditorTypeID = gettingStartedInputTypeId;
+	// 	const editor = this.editorService.activeEditor;
 
-		// Ensure that the welcome editor won't get opened more than once
-		if (editor?.typeId === startupEditorTypeID || this.editorService.editors.some(e => e.typeId === startupEditorTypeID)) {
-			return;
-		}
+	// 	// Ensure that the welcome editor won't get opened more than once
+	// 	if (editor?.typeId === startupEditorTypeID || this.editorService.editors.some(e => e.typeId === startupEditorTypeID)) {
+	// 		return;
+	// 	}
 
-		const options: GettingStartedEditorOptions = editor ? { pinned: false, index: 0, showTelemetryNotice } : { pinned: false, showTelemetryNotice };
-		if (startupEditorTypeID === gettingStartedInputTypeId) {
-			this.editorService.openEditor({
-				resource: GettingStartedInput.RESOURCE,
-				options,
-			});
-		}
-	}
+	// 	const options: GettingStartedEditorOptions = editor ? { pinned: false, index: 0, showTelemetryNotice } : { pinned: false, showTelemetryNotice };
+	// 	if (startupEditorTypeID === gettingStartedInputTypeId) {
+	// 		this.editorService.openEditor({
+	// 			resource: GettingStartedInput.RESOURCE,
+	// 			options,
+	// 		});
+	// 	}
+	// }
 }
 
 function isStartupPageEnabled(configurationService: IConfigurationService, contextService: IWorkspaceContextService, environmentService: IWorkbenchEnvironmentService, logService: ILogService) {

@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings Sidebar</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons/dist/codicon.css">
+  <style>
+    :root {
+      /* --background: var(--vscode-panel-background, #1e1e1e); */
+      --foreground: var(--vscode-panel-foreground, #d4d4d4);
+      /* --card: var(--vscode-panel-background, #1e1e1e); */
+      --card-foreground: var(--vscode-panel-foreground, #d4d4d4);
+      --primary: var(--vscode-button-background);
+      --primary-foreground: var(--vscode-button-foreground);
+      --secondary: var(--vscode-button-secondaryBackground);
+      --secondary-foreground: var(--vscode-button-secondaryForeground);
+      --muted: var(--vscode-disabledForeground);
+      --muted-foreground: var(--vscode-descriptionForeground);
+      --accent: var(--vscode-list-hoverBackground);
+      --accent-foreground: var(--vscode-list-hoverForeground);
+      --destructive: var(--vscode-errorForeground);
+      --destructive-foreground: var(--vscode-button-foreground);
+      --border: var(--vscode-input-border, transparent);
+      --input: var(--vscode-input-background);
+      --ring: var(--vscode-focusBorder);
+      --radius: 0.5rem;
+      --font-display: var(--vscode-font-family);
+      --text-xs: calc(var(--vscode-font-size) * 0.85);
+      --text-sm: calc(var(--vscode-font-size) * 0.9);
+      --text-base: var(--vscode-font-size);
+      --text-lg: calc(var(--vscode-font-size) * 1.1);
+    }
+    html, body, #root { height: 100%; width: 100%; margin: 0; padding: 0; }
+    body { font-family: var(--font-display, sans-serif); background: var(--background); color: var(--foreground); }
+    .container { display: flex; flex-direction: column; height: 100%; width: 100%; background: var(--background); }
+    .sidebar {
+      width: 48px;
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding-top: 4px;
+      gap: 0;
+      /* border-right: 1px solid var(--border); */
+    }
+    .sidebar button {
+      border: none;
+      border-left: 2px solid transparent;
+      color: var(--foreground);
+      opacity: 0.7;
+      background: none;
+      height: 48px;
+      width: 100%;
+      min-width: 0;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      border-radius: 0;
+      font-size: 24px;
+      margin: 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .sidebar button:hover {
+      background: var(--accent);
+      color: var(--accent-foreground);
+      opacity: 1;
+    }
+    .sidebar button.active {
+      opacity: 1;
+      border-left: 2px solid var(--ring);
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+    .sidebar .codicon {
+      font-size: 20px;
+      line-height: 1;
+      display: block;
+    }
+    .content { 
+      flex: 1; 
+      padding: 0; 
+      overflow: auto; 
+      background: var(--background);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .form-section {
+      max-width: 500px;
+      margin: 32px 0 0 0; /* Remove auto left/right margin, keep top margin */
+      background: var(--card);
+      /* border: 1px solid var(--border); */
+      border-radius: 8px;
+      padding: 28px 24px 24px 24px;
+      /* box-shadow: 0 1px 3px rgba(0,0,0,0.08); */
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      color: var(--card-foreground);
+      align-self: flex-start; /* Align form to the left, next to sidebar */
+    }
+    .form-section h2 {
+      color: var(--foreground);
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0 0 18px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 0;
+    }
+    .form-section label {
+      color: var(--foreground);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .form-section input,
+    .form-section select,
+    .form-section textarea {
+      width: 100%;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--foreground);
+      font-family: var(--font-display, 'Segoe UI', system-ui, sans-serif);
+      font-size: 13px;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
+    }
+    .form-section input:focus,
+    .form-section select:focus,
+    .form-section textarea:focus {
+      outline: none;
+      border-color: var(--ring);
+      box-shadow: 0 0 0 2px var(--ring)33;
+    }
+    .form-section input::placeholder,
+    .form-section textarea::placeholder {
+      color: var(--muted-foreground);
+    }
+    .form-section button {
+      background: var(--primary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--primary-foreground);
+      font-family: var(--font-display, 'Segoe UI', system-ui, sans-serif);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      min-width: 80px;
+      margin-left: 0;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    .form-section button:hover {
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+    .form-section button:active {
+      transform: translateY(1px);
+    }
+    .form-section button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .form-section .button-group {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+    .form-section .button-secondary {
+      background: var(--secondary);
+      color: var(--secondary-foreground);
+    }
+    .form-section .button-secondary:hover {
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+    .form-description {
+      color: var(--muted-foreground);
+      font-size: 12px;
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .form-checkbox {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 0;
+    }
+    .checkbox-label-desc {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-checkbox label {
+      margin-bottom: 0;
+    }
+    .form-checkbox input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--primary);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-grid-full {
+      grid-column: 1 / -1;
+    }
+    .input-with-button {
+      display: flex;
+      align-items: center;
+      position: relative;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding-right: 4px;
+    }
+    .input-with-button input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      border-radius: 0;
+    }
+    .browse-button {
+      background: var(--secondary);
+      border: none;
+      color: var(--secondary-foreground);
+      padding: 6px 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      min-width: 24px !important;
+      width: 24px;
+      height: 28px;
+      box-sizing: border-box;
+      border-radius: 2px;
+    }
+    .browse-button:hover {
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+    .browse-button .codicon {
+      font-size: 14px;
+    }
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-top: 4px;
+    }
+    .status-indicator.success {
+      background: var(--vscode-testing-iconPassed, #4CAF50);
+      color: white;
+    }
+    .status-indicator.error {
+      background: var(--vscode-errorForeground, #f44336);
+      color: white;
+    }
+    .status-indicator.warning {
+      background: var(--vscode-editorWarning-foreground, #ff9800);
+      color: white;
+    }
+    .venv-dropdown,
+    .conf-dropdown {
+      position: absolute;
+      background: var(--input);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      max-height: 180px;
+      overflow-y: auto;
+      font-size: 13px;
+      color: var(--foreground);
+    }
+    .venv-dropdown div,
+    .conf-dropdown div {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background-color 0.2s ease;
+    }
+    .venv-dropdown div:hover,
+    .conf-dropdown div:hover {
+      background: var(--accent);
+      color: var(--accent-foreground);
+    }
+    .venv-dropdown div:last-child,
+    .conf-dropdown div:last-child {
+      border-bottom: none;
+    }
+    .advanced-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      cursor: pointer;
+      color: var(--foreground);
+      font-size: 14px;
+      font-weight: 500;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+      transition: color 0.2s ease;
+    }
+    .advanced-toggle:hover {
+      color: var(--accent-foreground);
+    }
+    .advanced-toggle .codicon {
+      font-size: 16px;
+      transition: transform 0.2s ease;
+    }
+    .advanced-toggle.expanded .codicon {
+      transform: rotate(180deg);
+    }
+    .advanced-fields {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 0px;
+    }
+    @media (max-width: 600px) {
+      .form-section {
+        max-width: 100%;
+        margin: 0;
+        padding: 16px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .button-group {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .button-group button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="padding: 0 24px; font-size: 1.25rem; font-weight: bold; color: var(--foreground); height: 48px; display: flex; align-items: center; border-bottom: 1px solid var(--border);">Settings</div>
+    <div style="display: flex; flex: 1; min-height: 0;">
+      <div class="sidebar">
+        <button id="confBtn" title="Create Odoo Conf File" onclick="showContent('conf', this)">
+          <span class="codicon codicon-settings"></span>
+        </button>
+        <button id="debuggerBtn" class="active" title="Configure Debugger" onclick="showContent('debugger', this)">
+          <span class="codicon codicon-debug"></span>
+        </button>
+        <button id="pullBtn" title="Pull Odoo Source Code" onclick="showContent('pull', this)">
+          <span class="codicon codicon-cloud-download"></span>
+        </button>
+      </div>
+      <div class="content" id="content-area">
+        <!-- Content area will be filled by JS -->
+      </div>
+    </div>
+  </div>
+  <script>
+    const vscode = acquireVsCodeApi();
+    console.log('[Webview] Script loaded.');
+    // --- ADDED: Debounce utility ---
+    function debounce(fn, delay) {
+      let timer = null;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+    // --- END ADDED ---
+    function showContent(section, btn) {
+      document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      let html = '';
+      if (section === 'debugger') {
+        html = `<form class="form-section" id="debuggerForm">
+          <h2>Configure Odoo Debugger</h2>
+          <div class="form-row">
+            <label>Python Path</label>
+            <input type="text" name="pythonPath" placeholder="e.g. /usr/bin/python3" required />
+            <div class="form-description">Path to Python executable for Odoo</div>
+          </div>
+          <div class="form-row">
+            <label>Odoo-bin Path</label>
+            <input type="text" name="odooBinPath" placeholder="e.g. /path/to/odoo/odoo-bin" required />
+            <div class="form-description">Path to your Odoo installation executable</div>
+          </div>
+          <div class="form-row">
+            <label>Odoo Configuration Path</label>
+            <input type="text" name="confPath" placeholder="e.g. /path/to/odoo.conf" required />
+            <div class="form-description">Path to your Odoo configuration file</div>
+          </div>
+          <div class="form-checkbox">
+            <input type="checkbox" name="devReload" id="devReload" />
+            <label for="devReload">Enable development mode (--dev=reload,qweb,xml,assets)</label>
+          </div>
+          <!-- <div class="form-checkbox">
+            <input type="checkbox" name="autoStart" id="autoStart" />
+            <label for="autoStart">Auto-start debugger on launch</label>
+          </div> -->
+          <div class="button-group">
+            <button type="button" class="button-secondary">Test Configuration</button>
+            <button type="submit">Save Configuration</button>
+          </div>
+        </form>`;
+      } else if (section === 'pull') {
+        html = `<form class="form-section" id="pullForm">
+          <h2>Pull Odoo Source Code</h2>
+          <div class="form-grid">
+            <div class="form-row">
+              <label>Odoo Version</label>
+              <select name="odooVersion" required onchange="togglePythonVersionField(this.value)">
+                <option value="">Select Version</option>
+                <option value="18.0">18.0</option>
+                <option value="17.0">17.0</option>
+                <option value="16.0">16.0</option>
+                <option value="15.0">15.0</option>
+                <option value="14.0">14.0</option>
+                <option value="13.0">13.0</option>
+                <option value="12.0">12.0</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Target Directory</label>
+            <div class="input-with-button">
+              <input type="text" name="targetDir" placeholder="/path/to/target/folder" required />
+              <button type="button" class="browse-button" title="Browse Directory">
+                <span class="codicon codicon-folder-opened"></span>
+              </button>
+            </div>
+            <div class="form-description">Directory where Odoo source code will be cloned</div>
+          </div>
+          <div class="form-checkbox">
+            <input type="checkbox" name="createVenv" id="createVenv" checked onchange="toggleVenvOptions()" />
+            <div class="checkbox-label-desc">
+              <label for="createVenv">Download and setup virtual environment</label>
+              <div class="form-description">Downloads pre-configured virtual environment with all required packages</div>
+            </div>
+          </div>
+          <div class="form-row" id="pythonVersionRow" style="display: none; margin-left: 24px;">
+            <label>Python Version</label>
+            <select name="pythonVersion" id="pythonVersionSelect" style="margin-top: 8px;">
+              <option value="3.10">Python 3.10</option>
+              <option value="3.12">Python 3.12</option>
+            </select>
+            <div class="form-description" style="margin-top: 8px;">Choose Python version for virtual environment</div>
+          </div>
+          <div class="form-checkbox">
+            <input type="checkbox" name="openInVscode" id="openInVscode" checked />
+            <div class="checkbox-label-desc">
+                          <label for="openInVscode">Open folder in Assista after pull</label>
+            <div class="form-description">If checked, the folder will be opened in the current Assista window after pulling the source code.</div>
+            </div>
+          </div>
+          <div class="button-group">
+            <button type="submit">Setup Odoo Environment</button>
+          </div>
+        </form>`;
+      } else if (section === 'conf') {
+        html = `<form class="form-section" id="confForm">
+          <h2>Create Odoo Configuration</h2>
+          <div class="form-row">
+            <label for="confFileDropdown">Odoo Configuration File</label>
+            <select id="confFileDropdown" name="selectedConf" style="width:100%">
+              <option value="" disabled selected>Loading...</option>
+            </select>
+            <div class="form-description">Select an existing .conf file or create a new one</div>
+          </div>
+          <div class="form-row" id="newConfNameRow" style="display:none;">
+            <label for="newConfName">Enter Odoo conf file name</label>
+            <input type="text" id="newConfName" name="newConfName" placeholder="odoo.conf" value="odoo.conf" required />
+            <div class="form-description">Enter the name for the new configuration file (default: odoo.conf)</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label>Admin Password</label>
+              <input type="password" name="adminPassword" placeholder="Admin password (for db creation)" />
+            </div>
+            <div class="form-row">
+               <label>Database Name</label>
+               <input type="text" name="dbName" placeholder="odoo_db (leave blank to skip)"/>
+            </div>
+            <div class="form-row">
+              <label>Port</label>
+              <input type="number" name="port" placeholder="8069" value="8069" min="1" max="65535" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Database Host</label>
+            <input type="text" name="dbHost" placeholder="localhost" value="localhost" required />
+          </div>
+          <div class="form-grid">
+            <div class="form-row">
+              <label>Database User</label>
+              <input type="text" name="dbUser" placeholder="odoo" required />
+            </div>
+            <div class="form-row">
+              <label>Database Password</label>
+              <input type="password" name="dbPassword" placeholder="Password" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Addons Path</label>
+            <textarea name="addons" placeholder="./custom_addons,../enterprise (leave blank to skip)" rows="3"></textarea>
+            <div class="form-description">Comma-separated list of addon paths</div>
+          </div>
+          
+          <!-- Advanced Fields Toggle -->
+          <div class="advanced-toggle" onclick="toggleAdvancedFields()">
+            <span>Advanced Fields</span>
+            <span class="codicon codicon-chevron-down" id="advancedIcon"></span>
+          </div>
+          
+          <!-- Advanced Fields Section -->
+          <div class="advanced-fields" id="advancedFields" style="display: none;">
+            <div class="form-grid">
+              <div class="form-row">
+                <label>Log File</label>
+                <input type="text" name="logfile" placeholder="/var/log/odoo/odoo.log (leave blank to skip)" />
+              </div>
+            <!-- Developer Options -->
+            <div class="form-checkbox">
+              <input type="checkbox" name="devMode" id="devMode" />
+              <label for="devMode">Enable debug logging (--log-level=debug)</label>
+            </div>
+            <div class="form-row">
+              <label>Proxy Mode</label>
+              <select name="proxyMode">
+                <option value="">Select (leave blank to skip)</option>
+                <option value="True">True</option>
+                <option value="False">False</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>Max Cron Threads</label>
+              <input type="number" name="maxCronThreads" value="2" min="0" placeholder="2 (leave blank to skip)" />
+            </div>
+
+            <!-- Optional Fields -->
+            <div class="form-grid">
+              <div class="form-row">
+                <label>Workers</label>
+                <input type="number" name="workers" value="0" min="0" placeholder="0 (leave blank to skip)" />
+              </div>
+              <div class="form-row">
+                <label>Limit Memory Soft (MB)</label>
+                <input type="number" name="limitMemorySoft" placeholder="RAM MB (e.g. 2048) (leave blank to skip)" />
+              </div>
+              <div class="form-row">
+                <label>Limit Memory Hard (MB)</label>
+                <input type="number" name="limitMemoryHard" placeholder="RAM MB (e.g. 2560) (leave blank to skip)" />
+              </div>
+            </div>
+            </div>
+          </div>
+          <div class="button-group">
+            <button type="submit">Save Configuration</button>
+          </div>
+        </form>`;
+      }
+      document.getElementById('content-area').innerHTML = html;
+      // Attach form submit handlers and interactive features
+      if (section === 'debugger') {
+        const form = document.getElementById('debuggerForm');
+        vscode.postMessage({ type: 'getDebuggerConfig' });
+        form.onsubmit = function(e) {
+          e.preventDefault();
+          const data = Object.fromEntries(Array.from(new window.FormData(form)));
+          data.devReload = !!form.querySelector('input[name="devReload"]').checked;
+          showStatus('Saving configuration...', 'info');
+          vscode.postMessage({ type: 'configureDebugger', ...data });
+        };
+        form.querySelector('.button-secondary').onclick = function() {
+          const pythonPath = form.querySelector('input[name="pythonPath"]').value;
+          const odooBinPath = form.querySelector('input[name="odooBinPath"]').value;
+          const confPath = form.querySelector('input[name="confPath"]').value;
+          if (pythonPath && odooBinPath) {
+            showStatus('Testing configuration...', 'info');
+            vscode.postMessage({ type: 'testDebuggerConfig', pythonPath, odooBinPath, confPath });
+          } else {
+            showStatus('Please fill in Python and Odoo paths first', 'warning');
+          }
+        };
+        // --- UPDATED: Show venv suggestions as autocomplete while typing ---
+        const pythonInput = form.querySelector('input[name="pythonPath"]');
+        let venvDropdown = null;
+        const requestVenvs = debounce(function() {
+          vscode.postMessage({ type: 'listVenvs' });
+        }, 200);
+        pythonInput.addEventListener('input', function() {
+          requestVenvs();
+        });
+        
+        // --- ADDED: Show .conf file suggestions as autocomplete while typing ---
+        const confPathInput = form.querySelector('input[name="confPath"]');
+        let confDropdown = null;
+        const requestConfs = debounce(function() {
+          vscode.postMessage({ type: 'listConfs' });
+        }, 200);
+        confPathInput.addEventListener('input', function() {
+          requestConfs();
+        });
+        
+        window.addEventListener('message', event => {
+          const message = event.data;
+          if (message && message.type === 'venvList') {
+            if (venvDropdown) venvDropdown.remove();
+            const inputValue = pythonInput.value.trim().toLowerCase();
+            const filteredVenvs = message.venvs.filter(venv =>
+              venv.toLowerCase().includes(inputValue)
+            );
+            if (filteredVenvs.length === 0) return;
+            venvDropdown = document.createElement('div');
+            venvDropdown.className = 'venv-dropdown';
+            venvDropdown.style.width = pythonInput.offsetWidth + 'px';
+            // Position below the input
+            const rect = pythonInput.getBoundingClientRect();
+            venvDropdown.style.left = (rect.left + window.scrollX) + 'px';
+            venvDropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+            filteredVenvs.forEach(venv => {
+              const item = document.createElement('div');
+              item.textContent = venv;
+              item.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                pythonInput.value = venv;
+                venvDropdown.remove();
+                venvDropdown = null;
+              });
+              venvDropdown.appendChild(item);
+            });
+            document.body.appendChild(venvDropdown);
+          }
+          
+          if (message && message.type === 'confList') {
+            if (confDropdown) confDropdown.remove();
+            const inputValue = confPathInput.value.trim().toLowerCase();
+            const filteredConfs = message.confFiles.filter(conf =>
+              conf.toLowerCase().includes(inputValue)
+            );
+            if (filteredConfs.length === 0) return;
+            confDropdown = document.createElement('div');
+            confDropdown.className = 'conf-dropdown';
+            confDropdown.style.width = confPathInput.offsetWidth + 'px';
+            // Position below the input
+            const rect = confPathInput.getBoundingClientRect();
+            confDropdown.style.left = (rect.left + window.scrollX) + 'px';
+            confDropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+            filteredConfs.forEach(conf => {
+              const item = document.createElement('div');
+              item.textContent = conf;
+              item.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                confPathInput.value = conf;
+                confDropdown.remove();
+                confDropdown = null;
+              });
+              confDropdown.appendChild(item);
+            });
+            document.body.appendChild(confDropdown);
+          }
+        });
+        
+        document.addEventListener('click', function(e) {
+          if (venvDropdown && !pythonInput.contains(e.target) && !venvDropdown.contains(e.target)) {
+            venvDropdown.remove();
+            venvDropdown = null;
+          }
+          if (confDropdown && !confPathInput.contains(e.target) && !confDropdown.contains(e.target)) {
+            confDropdown.remove();
+            confDropdown = null;
+          }
+        });
+        // --- END UPDATED ---
+      } else if (section === 'pull') {
+        const form = document.getElementById('pullForm');
+        
+        // Initialize Python version field visibility
+        const odooVersionSelect = form.querySelector('select[name="odooVersion"]');
+        const createVenvCheckbox = form.querySelector('input[name="createVenv"]');
+        
+        // Initialize the venv options visibility
+        if (odooVersionSelect && createVenvCheckbox) {
+          toggleVenvOptions();
+        }
+        
+        form.onsubmit = function(e) {
+          e.preventDefault();
+          const data = Object.fromEntries(Array.from(new window.FormData(form)));
+          // Convert checkbox value to boolean
+          data.openInVscode = !!form.querySelector('input[name="openInVscode"]').checked;
+          showStatus('Setting up Odoo environment...', 'info');
+          vscode.postMessage({ type: 'pullOdooSource', ...data });
+        };
+        
+        // Handle the embedded browse button
+        const browseButton = form.querySelector('.browse-button');
+        if (browseButton) {
+          browseButton.onclick = function() {
+            vscode.postMessage({ type: 'browseDirectory' });
+          };
+        }
+        
+        // Listen for directory selection response
+        window.addEventListener('message', event => {
+          const message = event.data;
+          if (message && message.type === 'directorySelected') {
+            const targetDirInput = form.querySelector('input[name="targetDir"]');
+            if (targetDirInput) {
+              targetDirInput.value = message.path;
+            }
+          }
+        });
+        
+
+      } else if (section === 'conf') {
+        const form = document.getElementById('confForm');
+        // --- Conf file dropdown logic ---
+        const confFileDropdown = form.querySelector('#confFileDropdown');
+        const newConfNameRow = form.querySelector('#newConfNameRow');
+        vscode.postMessage({ type: 'listConfs' });
+        window.addEventListener('message', function confDropdownListener(event) {
+          const message = event.data;
+          if (message && message.type === 'confList' && confFileDropdown) {
+            // Remove all options
+            confFileDropdown.innerHTML = '';
+            confFileDropdown.innerHTML += '<option value="__create_new__">Create new Odoo conf file...</option>';
+            if (message.confFiles.length === 0) {
+              confFileDropdown.innerHTML += '<option value="" disabled>No .conf files found</option>';
+            } else {
+              message.confFiles.forEach(function(conf) {
+                confFileDropdown.innerHTML += `<option value="${conf}">${conf}</option>`;
+              });
+            }
+            // Select defaultConfPath if present
+            if (message.defaultConfPath) {
+              const idx = message.confFiles.findIndex(f => f === message.defaultConfPath);
+              if (idx !== -1) {
+                confFileDropdown.selectedIndex = idx + 1; // +1 for the create new option
+              } else {
+                confFileDropdown.selectedIndex = 0;
+              }
+            } else {
+              confFileDropdown.selectedIndex = 0;
+            }
+            // Always trigger change event after setting selection
+            setTimeout(() => confFileDropdown.dispatchEvent(new Event('change')), 0);
+          }
+        }, { once: true });
+        confFileDropdown.addEventListener('change', function() {
+          // Always check and show/hide the new conf name row
+          if (confFileDropdown.value === '__create_new__') {
+            newConfNameRow.style.display = '';
+            // Clear all form fields
+            form.querySelector('input[name="adminPassword"]').value = '';
+            form.querySelector('input[name="dbName"]').value = '';
+            form.querySelector('input[name="port"]').value = '';
+            form.querySelector('input[name="dbHost"]').value = '';
+            form.querySelector('input[name="dbUser"]').value = '';
+            form.querySelector('input[name="dbPassword"]').value = '';
+            form.querySelector('textarea[name="addons"]').value = '';
+            form.querySelector('input[name="logfile"]').value = '';
+            form.querySelector('select[name="proxyMode"]').value = '';
+            form.querySelector('input[name="maxCronThreads"]').value = '';
+            form.querySelector('input[name="workers"]').value = '';
+            form.querySelector('input[name="limitMemorySoft"]').value = '';
+            form.querySelector('input[name="limitMemoryHard"]').value = '';
+            form.querySelector('input[name="devMode"]').checked = false;
+            form.querySelector('input[name="logLevel"]').checked = false;
+          } else {
+            newConfNameRow.style.display = 'none';
+            // Fetch and prefill conf values
+            if (confFileDropdown.value) {
+              vscode.postMessage({ type: 'readConfFile', path: confFileDropdown.value });
+            }
+          }
+        });
+        // Listen for confFileData and prefill fields
+        window.addEventListener('message', function confFileDataListener(event) {
+          const message = event.data;
+          if (message && message.type === 'confFileData' && message.data) {
+            // Prefill form fields with conf values
+            const data = message.data;
+            if (form) {
+              // Only set value if present in conf file, otherwise blank
+              form.querySelector('input[name="adminPassword"]').value = data.admin_passwd !== undefined ? data.admin_passwd : '';
+              form.querySelector('input[name="dbName"]').value = data.db_name !== undefined ? data.db_name : '';
+              form.querySelector('input[name="port"]').value = data.xmlrpc_port !== undefined ? data.xmlrpc_port : '';
+              form.querySelector('input[name="dbHost"]').value = data.db_host !== undefined ? data.db_host : '';
+              form.querySelector('input[name="dbUser"]').value = data.db_user !== undefined ? data.db_user : '';
+              form.querySelector('input[name="dbPassword"]').value = data.db_password !== undefined ? data.db_password : '';
+              form.querySelector('textarea[name="addons"]').value = data.addons_path !== undefined ? data.addons_path : '';
+              form.querySelector('input[name="logfile"]').value = data.logfile !== undefined ? data.logfile : '';
+              form.querySelector('select[name="proxyMode"]').value = data.proxy_mode !== undefined ? data.proxy_mode : '';
+              form.querySelector('input[name="maxCronThreads"]').value = data.max_cron_threads !== undefined ? data.max_cron_threads : '';
+              form.querySelector('input[name="workers"]').value = data.workers !== undefined ? data.workers : '';
+              form.querySelector('input[name="limitMemorySoft"]').value = data.limit_memory_soft !== undefined ? data.limit_memory_soft : '';
+              form.querySelector('input[name="limitMemoryHard"]').value = data.limit_memory_hard !== undefined ? data.limit_memory_hard : '';
+              // Advanced checkboxes
+              form.querySelector('input[name="devMode"]').checked = (data['dev'] === 'all' || data['dev'] === 'True' || data['dev'] === '1') ? true : false;
+              form.querySelector('input[name="logLevel"]').checked = (data['log_level'] === 'debug') ? true : false;
+            }
+          }
+        });
+        // --- End conf file dropdown logic ---
+        form.onsubmit = function(e) {
+          e.preventDefault();
+          const data = Object.fromEntries(Array.from(new window.FormData(form)));
+          // If an existing conf file is selected, send its path as updateConfPath
+          if (confFileDropdown && confFileDropdown.value && confFileDropdown.value !== '__create_new__') {
+            data.updateConfPath = confFileDropdown.value;
+          }
+          // If creating a new conf file, send the custom file name as confFileName
+          if (confFileDropdown && confFileDropdown.value === '__create_new__') {
+            data.confFileName = form.querySelector('input[name="newConfName"]').value || 'odoo.conf';
+          }
+          showStatus('Creating Odoo configuration...', 'info');
+          vscode.postMessage({ type: 'createOdooConf', ...data });
+        };
+        if (form.querySelector('.button-secondary')) {
+          form.querySelector('.button-secondary').onclick = function() {
+            vscode.postMessage({ type: 'loadConfigTemplate' });
+          };
+        }
+      }
+    }
+    function showStatus(message, type) {
+      const existingStatus = document.querySelector('.status-indicator');
+      if (existingStatus) {
+        existingStatus.remove();
+      }
+      const statusDiv = document.createElement('div');
+      statusDiv.className = 'status-indicator ' + type;
+      statusDiv.textContent = message;
+      const contentArea = document.getElementById('content-area');
+      if (contentArea) contentArea.appendChild(statusDiv);
+      if (type === 'info') {
+        setTimeout(() => {
+          if (statusDiv.parentNode) {
+            statusDiv.remove();
+          }
+        }, 3000);
+      }
+    }
+    // Function to toggle Python version field visibility and set defaults
+    function togglePythonVersionField(odooVersion) {
+      const pythonVersionRow = document.getElementById('pythonVersionRow');
+      const pythonVersionSelect = document.getElementById('pythonVersionSelect');
+      const createVenvCheckbox = document.getElementById('createVenv');
+      
+      // Only show Python version if venv is enabled AND it's Odoo 17/18
+      if (createVenvCheckbox && createVenvCheckbox.checked && (odooVersion === '18.0' || odooVersion === '17.0')) {
+        pythonVersionRow.style.display = 'block';
+        
+        // Set default Python version based on Odoo version
+        if (odooVersion === '18.0') {
+          pythonVersionSelect.value = '3.12';
+        } else if (odooVersion === '17.0') {
+          pythonVersionSelect.value = '3.10';
+        }
+      } else {
+        pythonVersionRow.style.display = 'none';
+      }
+    }
+    
+    function toggleVenvOptions() {
+      const createVenvCheckbox = document.getElementById('createVenv');
+      const pythonVersionRow = document.getElementById('pythonVersionRow');
+      const odooVersionSelect = document.querySelector('select[name="odooVersion"]');
+      
+      if (createVenvCheckbox.checked) {
+        togglePythonVersionField(odooVersionSelect.value);
+      } else {
+        pythonVersionRow.style.display = 'none';
+      }
+    }
+    
+    function toggleAdvancedFields() {
+      const advancedFields = document.getElementById('advancedFields');
+      const advancedToggle = document.querySelector('.advanced-toggle');
+      const advancedIcon = document.getElementById('advancedIcon');
+      
+      if (advancedFields.style.display === 'none') {
+        advancedFields.style.display = 'block';
+        advancedToggle.classList.add('expanded');
+      } else {
+        advancedFields.style.display = 'none';
+        advancedToggle.classList.remove('expanded');
+      }
+    }
+    
+    window.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.sidebar button').forEach(function(btn) { btn.classList.remove('active'); });
+      document.getElementById('confBtn').classList.add('active');
+      showContent('conf', document.getElementById('confBtn'));
+    });
+
+
+    // Listen for status messages from the extension host
+    window.addEventListener('message', event => {
+      const message = event.data;
+      console.log('Message received in webview:', message);
+      if (message && message.type === 'status') {
+        showStatus(message.message, 'info');
+      }
+      if (message && message.type === 'debuggerConfig') {
+        console.log('debuggerConfig message received:', message);
+        const form = document.getElementById('debuggerForm');
+        console.log('Form element:', form);
+        if (form) {
+            const pythonPathInput = form.querySelector('input[name="pythonPath"]');
+            const odooBinPathInput = form.querySelector('input[name="odooBinPath"]');
+            const confPathInput = form.querySelector('input[name="confPath"]');
+            const devReloadInput = form.querySelector('input[name="devReload"]');
+            console.log('Inputs:', pythonPathInput, odooBinPathInput, confPathInput);
+
+            if(pythonPathInput) pythonPathInput.value = message.pythonPath || '';
+            if(odooBinPathInput) odooBinPathInput.value = message.odooBinPath || '';
+            if(confPathInput) confPathInput.value = message.confPath || '';
+            if(devReloadInput) devReloadInput.checked = !!message.devReload;
+
+            if(pythonPathInput && odooBinPathInput && confPathInput) {
+                console.log('Set values:', pythonPathInput.value, odooBinPathInput.value, confPathInput.value);
+            }
+        }
+      }
+      if (message && message.type === 'testDebuggerConfigResult') {
+        // Remove previous result if any
+        const oldResult = document.getElementById('test-config-result');
+        if (oldResult) oldResult.remove();
+        // Find the debugger form and button group
+        const form = document.getElementById('debuggerForm');
+        if (form) {
+          const btnGroup = form.querySelector('.button-group');
+          if (btnGroup) {
+            // Create result container
+            const resultDiv = document.createElement('div');
+            resultDiv.id = 'test-config-result';
+            resultDiv.style.marginTop = '16px';
+            // Build result HTML
+            const results = message.results;
+            let html = '<div style="font-size:13px;"><b>Test Results:</b><ul style="padding-left:18px;">';
+            if (results.python) {
+              html += `<li style="color:${results.python.success ? 'limegreen' : 'red'};">Python: ${results.python.message}</li>`;
+            }
+            if (results.odoo) {
+              html += `<li style="color:${results.odoo.success ? 'limegreen' : 'red'};">Odoo-bin: ${results.odoo.message}</li>`;
+            }
+            if (results.conf) {
+              html += `<li style="color:${results.conf.success ? 'limegreen' : 'red'};">Config: ${results.conf.message}</li>`;
+            }
+            html += '</ul></div>';
+            resultDiv.innerHTML = html;
+            btnGroup.parentNode.insertBefore(resultDiv, btnGroup.nextSibling);
+          }
+        }
+      }
+      if (message && message.type === 'showDebugger') {
+        // Find the debugger button and simulate a click
+        const debuggerBtn = document.getElementById('debuggerBtn');
+        if (debuggerBtn) {
+          showContent('debugger', debuggerBtn);
+        }
+      }
+    });
+  </script>
+</body>
+</html> 

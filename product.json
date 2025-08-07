@@ -12,7 +12,7 @@
   "serverLicensePrompt": "",
   "serverApplicationName": "cybrosys-assista-server",
   "serverDataFolderName": ".cybrosys-assista-server",
-  "tunnelApplicationName": "code-oss-tunnel",
+  "tunnelApplicationName": "cybrosys-assista",
   "win32DirName": "Cybrosys Assista",
   "win32NameVersion": "Cybrosys Assista",
   "win32RegValueName": "CybrosysAssista",
@@ -104,13 +104,43 @@
       }
     },
     {
-      "name": "DotJoshJohnson.xml",
-      "version": "2.5.1",
-      "repo": "https://github.com/DotJoshJohnson/vscode-xml",
+      "name": "cybrosys-assista-ltd.cybrosys-assista-odoo-helper",
+      "version": "1.4.1",
+      "repo": "https://github.com/CybrosysAssista/Assista-VS-Code",
       "metadata": {
-        "id": "DotJoshJohnson.xml",
-        "publisherId": "DotJoshJohnson",
-        "publisherDisplayName": "Josh Johnson"
+        "id": "cybrosys-assista-ltd.cybrosys-assista-odoo-helper",
+        "publisherId": "cybrosys-assista-ltd",
+        "publisherDisplayName": "Cybrosys Assista"
+      }
+    },
+    {
+      "name": "cybrosys-assista-ltd.cybrosys-assista",
+      "version": "1.0.4",
+      "repo": "https://github.com/CybrosysAssista/Assista",
+      "metadata": {
+        "id": "cybrosys-assista-ltd.cybrosys-assista",
+        "publisherId": "cybrosys-assista-ltd",
+        "publisherDisplayName": "Cybrosys Assista"
+      }
+    },
+    {
+      "name": "formulahendry.auto-rename-tag",
+      "version": "0.1.10",
+      "repo": "https://github.com/formulahendry/auto-rename-tag",
+      "metadata": {
+        "id": "formulahendry.auto-rename-tag",
+        "publisherId": "formulahendry",
+        "publisherDisplayName": "Jun Han"
+      }
+    },
+    {
+      "name": "formulahendry.auto-close-tag",
+      "version": "0.5.15",
+      "repo": "https://github.com/formulahendry/auto-close-tag",
+      "metadata": {
+        "id": "formulahendry.auto-close-tag",
+        "publisherId": "formulahendry",
+        "publisherDisplayName": "Jun Han"
       }
     }
   ],

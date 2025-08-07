@@ -4,10 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Codicon } from '../../../../base/common/codicons.js';
+import { AssistaIcon } from '../../../../base/common/assistaIcons.js';
 import { localize } from '../../../../nls.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 
-export const DEFAULT_ICON = registerIcon('settings-view-bar-icon', Codicon.settingsGear, localize('settingsViewBarIcon', "Settings icon in the view bar."));
+export const DEFAULT_ICON = registerIcon('settings-view-bar-icon', AssistaIcon.settings, localize('settingsViewBarIcon', "Settings icon in the view bar."));
 
 export const ICONS = [
 

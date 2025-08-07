@@ -415,9 +415,23 @@ export class ExtensionsListView extends ViewPane {
 		let { value, includedCategories, excludedCategories } = this.parseCategories(query.value);
 		value = value.replaceAll(/@builtin/gi, '').replaceAll(/@sort:(\w+)(-\w*)?/g, '').trim().toLowerCase();
 
+		// Dictionary of Assista extensions to hide from Extensions view
+		const hiddenAssistaExtensions: { [key: string]: string } = {
+			'odoo-source-control': 'cybrosys-assista-ltd.odoo-source-control',
+			'assista-dark-theme': 'cybrosys-assista-ltd.assista-dark-theme',
+			'assista-light-theme': 'cybrosys-assista-ltd.assista-light-theme',
+			'assista-midnight-theme': 'cybrosys-assista-ltd.assista-midnight-theme',
+			'cybrosys-assista-odoo-helper': 'cybrosys-assista-ltd.cybrosys-assista-odoo-helper',
+			'cybrosys-assista': 'cybrosys-assista-ltd.cybrosys-assista'
+		};
+
 		const result = local
 			.filter(e => e.isBuiltin && (e.name.toLowerCase().indexOf(value) > -1 || e.displayName.toLowerCase().indexOf(value) > -1)
-				&& this.filterExtensionByCategory(e, includedCategories, excludedCategories));
+				&& this.filterExtensionByCategory(e, includedCategories, excludedCategories)
+				// Hide all Assista-related extensions from Extensions view
+				&& !(e.name in hiddenAssistaExtensions)
+				&& !(e.identifier.id in hiddenAssistaExtensions)
+				&& !Object.values(hiddenAssistaExtensions).includes(e.identifier.id));
 
 		return this.sortExtensions(result, options);
 	}

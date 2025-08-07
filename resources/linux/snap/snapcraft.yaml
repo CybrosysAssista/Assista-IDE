@@ -1,5 +1,5 @@
 name: @@NAME@@
-version: '@@VERSION@@'
+version: '2025.2.0.0'
 summary: Code editing. Redefined.
 description: |
   Visual Studio Code is a new choice of tool that combines the
@@ -19,6 +19,8 @@ parts:
   code:
     plugin: dump
     source: .
+    build-packages:
+      - patchelf
     stage-packages:
       - ca-certificates
       - libasound2

@@ -1,8 +1,9 @@
 {
   "name": "odoo-source-control",
   "displayName": "Odoo Source Control",
-  "description": "Complete Odoo development environment with source control, configuration, and welcome screen",
-  "version": "0.0.1",
+  "description": "Complete Odoo development environment with source control and configuration",
+  "publisher": "cybrosys-assista-ltd",
+  "version": "2.0.3",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -10,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:odoo-source-control.SidebarProvider"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -32,79 +34,23 @@
         "title": "Config Odoo Debugger",
         "icon": "$(debug-alt)",
         "category": "Odoo"
-      },
-      {
-        "command": "odoo-source-control.showWelcome",
-        "title": "Show Odoo Welcome Screen",
-        "icon": "$(home)",
-        "category": "Odoo"
-      },
-      {
-        "command": "odoo-source-control.showConfigure",
-        "title": "Configure Odoo Workspace",
-        "icon": "$(gear)",
-        "category": "Odoo"
       }
     ],
-    "configuration": {
-      "title": "Odoo Source Control",
-      "properties": {
-        "odoo-source-control.needsConfiguration": {
-          "type": "boolean",
-          "default": false,
-          "description": "Internal flag to trigger configuration screen"
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "odoo-source-control-activitybar",
+          "title": "Odoo",
+          "icon": "icon.svg"
         }
-      }
+      ]
     },
-    "menus": {
-      "menubar/help": [
+    "views": {
+      "odoo-source-control-activitybar": [
         {
-          "command": "odoo-source-control.showWelcome",
-          "group": "navigation@1"
-        },
-        {
-          "command": "odoo-source-control.pullSource",
-          "group": "navigation@2"
-        },
-        {
-          "command": "odoo-source-control.createConfig",
-          "group": "navigation@3"
-        },
-        {
-          "command": "odoo-source-control.configDebugger",
-          "group": "navigation@4"
-        }
-      ],
-      "editor/title": [
-
-        {
-          "command": "odoo-source-control.pullSource",
-          "group": "navigation",
-          "when": "editorIsOpen"
-        },
-        {
-          "command": "odoo-source-control.createConfig",
-          "group": "navigation",
-          "when": "editorIsOpen"
-        },
-        {
-          "command": "odoo-source-control.configDebugger",
-          "group": "navigation",
-          "when": "editorIsOpen"
-        }
-      ],
-      "commandPalette": [
-        {
-          "command": "odoo-source-control.showWelcome"
-        },
-        {
-          "command": "odoo-source-control.pullSource"
-        },
-        {
-          "command": "odoo-source-control.createConfig"
-        },
-        {
-          "command": "odoo-source-control.configDebugger"
+          "id": "odoo-source-control.SidebarProvider",
+          "type": "webview",
+          "name": "Odoo Settings"
         }
       ]
     }
@@ -113,13 +59,13 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
+    "pretest": "npm run compile \u0026\u0026 npm run lint",
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.80.0",
     "@types/node": "^16.11.7",
+    "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^6.7.0",
     "eslint": "^8.26.0",

@@ -5461,7 +5461,7 @@ class EditorPasteAs extends BaseEditorOption<EditorOption.pasteAs, IPasteAsOptio
 
 const DEFAULT_WINDOWS_FONT_FAMILY = 'Consolas, \'Courier New\', monospace';
 const DEFAULT_MAC_FONT_FAMILY = 'Menlo, Monaco, \'Courier New\', monospace';
-const DEFAULT_LINUX_FONT_FAMILY = '\'Droid Sans Mono\', \'monospace\', monospace';
+const DEFAULT_LINUX_FONT_FAMILY = '\'JetBrains Mono\', \'monospace\', monospace';
 
 /**
  * @internal
@@ -5472,9 +5472,9 @@ export const EDITOR_FONT_DEFAULTS = {
 	),
 	fontWeight: 'normal',
 	fontSize: (
-		platform.isMacintosh ? 12 : 14
+		platform.isMacintosh ? 12 : 13
 	),
-	lineHeight: 0,
+	lineHeight: 1.6,
 	letterSpacing: 0,
 };
 

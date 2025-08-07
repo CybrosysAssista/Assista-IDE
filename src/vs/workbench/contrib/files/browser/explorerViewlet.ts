@@ -35,11 +35,12 @@ import { IsWebContext } from '../../../../platform/contextkey/common/contextkeys
 import { AddRootFolderAction, OpenFolderAction, OpenFolderViaWorkspaceAction } from '../../../browser/actions/workspaceActions.js';
 import { OpenRecentAction } from '../../../browser/actions/windowActions.js';
 import { Codicon } from '../../../../base/common/codicons.js';
+import { AssistaIcon } from '../../../../base/common/assistaIcons.js';
 import { registerIcon } from '../../../../platform/theme/common/iconRegistry.js';
 import { isMouseEvent } from '../../../../base/browser/dom.js';
 import { ILogService } from '../../../../platform/log/common/log.js';
 
-const explorerViewIcon = registerIcon('explorer-view-icon', Codicon.files, localize('explorerViewIcon', 'View icon of the explorer view.'));
+const explorerViewIcon = registerIcon('explorer-view-icon', AssistaIcon.folder, localize('explorerViewIcon', 'View icon of the explorer view.'));
 const openEditorsViewIcon = registerIcon('open-editors-view-icon', Codicon.book, localize('openEditorsIcon', 'View icon of the open editors view.'));
 
 export class ExplorerViewletViewsContribution extends Disposable implements IWorkbenchContribution {

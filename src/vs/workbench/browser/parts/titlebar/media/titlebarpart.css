@@ -161,8 +161,9 @@
 	border-top-right-radius: 6px;
 	border-bottom-right-radius: 6px;
 	height: 22px;
-	width: 38vw;
+	/* width: 38vw; */
 	max-width: 600px;
+	padding-right: 5px;
 }
 
 .monaco-workbench .part.titlebar > .titlebar-container > .titlebar-center > .window-title > .command-center .action-item.command-center-center .action-item.command-center-quick-pick {
@@ -452,4 +453,144 @@
 	padding: 0 2px;
 	border-radius: 16px;
 	text-align: center;
+}
+
+/* --- Custom Debug Action Icon Colors --- */
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-right .codicon-assista-run {
+  color: #43a047 !important; /* Green for Run */
+}
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-right .codicon.codicon-assista-restart {
+  color: #43a047 !important; /* Green for Restart */
+}
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-right .codicon.codicon-assista-debugger {
+  color: #43a047 !important; /* Green for Debugger */
+}
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-right .codicon.codicon-assista-stop-debugging {
+  color: #e53935 !important; /* Red for Stop */
+}
+
+/* Hamburger Menu Button */
+.hamburger-menu-button {
+	z-index: 2500;
+	pointer-events: auto;
+	position: relative;
+	-webkit-app-region: no-drag;
+	order: 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	font-size: 20px;
+	cursor: pointer;
+	margin-left: 10px;
+	height: 100%;
+	color: inherit;
+	outline: none;
+}
+.hamburger-menu-button:hover {
+	background: rgba(128,128,128,0.1);
+}
+.codicon-assista-hamburger {
+	font-size: 14px;
+	color: inherit;
+}
+
+/* Command Center Container in Left Content */
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container {
+	z-index: 2500;
+	-webkit-app-region: no-drag;
+	order: 3;
+	display: flex;
+	align-items: center;
+	margin-left: 8px;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center {
+	z-index: 2500;
+	-webkit-app-region: no-drag;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center.hide {
+	visibility: hidden;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item > .action-label,
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.monaco-dropdown-with-primary .action-label {
+	color: var(--vscode-titleBar-activeForeground);
+}
+
+.monaco-workbench .part.titlebar.inactive > .titlebar-container > .titlebar-left > .command-center-container > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item > .action-label,
+.monaco-workbench .part.titlebar.inactive > .titlebar-container > .titlebar-left > .command-center-container > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item.monaco-dropdown-with-primary .action-label {
+	color: var(--vscode-titleBar-inactiveForeground);
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center > .monaco-toolbar > .monaco-action-bar > .actions-container > .action-item > .action-label {
+	color: inherit;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center {
+	display: flex;
+	align-items: stretch;
+	color: var(--vscode-commandCenter-foreground);
+	background-color: var(--vscode-commandCenter-background);
+	border: 1px solid var(--vscode-commandCenter-border);
+	overflow: hidden;
+	margin: 0 6px;
+	border-top-left-radius: 6px;
+	border-bottom-left-radius: 6px;
+	border-top-right-radius: 6px;
+	border-bottom-right-radius: 6px;
+	height: 22px;
+	max-width: 400px;
+	padding-right: 5px;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center .action-item.command-center-quick-pick {
+	display: flex;
+	justify-content: start;
+	overflow: hidden;
+	margin: auto;
+	max-width: 400px;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center .action-item.command-center-quick-pick .search-icon {
+	font-size: 14px;
+	opacity: .8;
+	margin: auto 3px;
+	color: var(--vscode-commandCenter-foreground);
+}
+
+.monaco-workbench .part.titlebar.inactive > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center .action-item.command-center-quick-pick .search-icon {
+	color: var(--vscode-titleBar-inactiveForeground);
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center .action-item.command-center-quick-pick .search-label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center.multiple {
+	justify-content: flex-start;
+	padding: 0 12px;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center.multiple.active .action-label {
+	background-color: inherit;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center:only-child {
+	margin-left: 0;
+}
+
+.monaco-workbench .part.titlebar.inactive > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center {
+	color: var(--vscode-titleBar-inactiveForeground);
+	border-color: var(--vscode-commandCenter-inactiveBorder) !important;
+}
+
+.monaco-workbench .part.titlebar > .titlebar-container > .titlebar-left > .command-center-container > .command-center .action-item.command-center-center:HOVER {
+	color: var(--vscode-commandCenter-activeForeground);
+	background-color: var(--vscode-commandCenter-activeBackground);
+	border-color: var(--vscode-commandCenter-activeBorder);
 }

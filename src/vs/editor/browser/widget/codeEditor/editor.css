@@ -3,6 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+/* Import JetBrains Mono font locally */
+@import url("../../../../base/browser/ui/fonts/jetbrains-mono/jetbrains-mono.css");
+
 /* -------------------- IE10 remove auto clear button -------------------- */
 
 ::-ms-clear {

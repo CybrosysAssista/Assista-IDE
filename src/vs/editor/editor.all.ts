@@ -16,6 +16,8 @@ import './contrib/codelens/browser/codelensController.js';
 import './contrib/colorPicker/browser/colorPickerContribution.js';
 import './contrib/comment/browser/comment.js';
 import './contrib/contextmenu/browser/contextmenu.js';
+import './contrib/odooModelContext.js';
+import './contrib/odooCodeLens.js';
 import './contrib/cursorUndo/browser/cursorUndo.js';
 import './contrib/dnd/browser/dnd.js';
 import './contrib/dropOrPasteInto/browser/copyPasteContribution.js';

@@ -3,13 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-.quick-input-widget {
+/* Quick Input Backdrop */
+.quick-input-backdrop {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background-color: rgba(0, 0, 0, 0.1);
+	backdrop-filter: blur(2px);
+	-webkit-backdrop-filter: blur(2px);
+	z-index: 2549; /* Just below quick input widget z-index (2550) */
+	display: none;
+	pointer-events: none; /* Allow clicks to pass through to background */
+	transition: opacity 0.2s ease-in-out;
+}
+
+.quick-input-backdrop.visible {
+	display: block;
+	pointer-events: auto; /* Enable pointer events when visible */
+}
+
+ .quick-input-widget {
 	position: absolute;
 	width: 600px;
 	z-index: 2550;
 	left: 50%;
 	-webkit-app-region: no-drag;
 	border-radius: 6px;
+	background: var(--vscode-quickInput-background, #222); /* fallback color */
+	padding: 9px 9px; /* vertical and horizontal padding */
+
 }
 
 .quick-input-titlebar {
@@ -164,6 +188,8 @@
 
 .quick-input-list {
 	line-height: 22px;
+	padding-top: 10px ;
+
 }
 
 .quick-input-widget.hidden-input .quick-input-list {
@@ -395,4 +421,17 @@
 	height: 100%;
 	width: 0;
 	top: 0;
+}
+/* Style the input field itself */
+.quick-input-widget .monaco-inputbox {
+    height: 34px;
+    font-size: 1.1em;
+    border: none !important;
+    border-bottom: 1px solid var(--vscode-editorRuler-foreground) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: inherit !important;
+    line-height: 32px !important;
 }

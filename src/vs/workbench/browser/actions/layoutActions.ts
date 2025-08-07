@@ -3,6 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
+
 import { ILocalizedString, localize, localize2 } from '../../../nls.js';
 import { MenuId, MenuRegistry, registerAction2, Action2 } from '../../../platform/actions/common/actions.js';
 import { Categories } from '../../../platform/action/common/actionCommonCategories.js';
@@ -25,7 +26,7 @@ import { ICommandService } from '../../../platform/commands/common/commands.js';
 import { AuxiliaryBarVisibleContext, PanelAlignmentContext, PanelVisibleContext, SideBarVisibleContext, FocusedViewContext, InEditorZenModeContext, IsMainEditorCenteredLayoutContext, MainEditorAreaVisibleContext, IsMainWindowFullscreenContext, PanelPositionContext, IsAuxiliaryWindowFocusedContext, TitleBarStyleContext, IsAuxiliaryWindowContext } from '../../common/contextkeys.js';
 import { Codicon } from '../../../base/common/codicons.js';
 import { ThemeIcon } from '../../../base/common/themables.js';
-import { DisposableStore } from '../../../base/common/lifecycle.js';
+import { DisposableStore, Disposable } from '../../../base/common/lifecycle.js';
 import { registerIcon } from '../../../platform/theme/common/iconRegistry.js';
 import { ICommandActionTitle } from '../../../platform/action/common/action.js';
 import { mainWindow } from '../../../base/browser/window.js';
@@ -34,16 +35,19 @@ import { MenuSettings, TitlebarStyle } from '../../../platform/window/common/win
 import { IPreferencesService } from '../../services/preferences/common/preferences.js';
 import { QuickInputAlignmentContextKey } from '../../../platform/quickinput/browser/quickInput.js';
 import { IEditorGroupsService } from '../../services/editor/common/editorGroupsService.js';
+import { SearchView } from '../../contrib/search/browser/searchView.js';
+import { IViewPaneOptions } from '../../browser/parts/views/viewPane.js';
+import { AssistaIcon } from '../../../base/common/assistaIcons.js';
 
 // Register Icons
 const menubarIcon = registerIcon('menuBar', Codicon.layoutMenubar, localize('menuBarIcon', "Represents the menu bar"));
 const activityBarLeftIcon = registerIcon('activity-bar-left', Codicon.layoutActivitybarLeft, localize('activityBarLeft', "Represents the activity bar in the left position"));
 const activityBarRightIcon = registerIcon('activity-bar-right', Codicon.layoutActivitybarRight, localize('activityBarRight', "Represents the activity bar in the right position"));
-const panelLeftIcon = registerIcon('panel-left', Codicon.layoutSidebarLeft, localize('panelLeft', "Represents a side bar in the left position"));
-const panelLeftOffIcon = registerIcon('panel-left-off', Codicon.layoutSidebarLeftOff, localize('panelLeftOff', "Represents a side bar in the left position toggled off"));
-const panelRightIcon = registerIcon('panel-right', Codicon.layoutSidebarRight, localize('panelRight', "Represents side bar in the right position"));
-const panelRightOffIcon = registerIcon('panel-right-off', Codicon.layoutSidebarRightOff, localize('panelRightOff', "Represents side bar in the right position toggled off"));
-const panelIcon = registerIcon('panel-bottom', Codicon.layoutPanel, localize('panelBottom', "Represents the bottom panel"));
+const panelLeftIcon = registerIcon('panel-left', AssistaIcon.togglePrimarySidebarOn, localize('panelLeft', "Represents a side bar in the left position"));
+const panelLeftOffIcon = registerIcon('panel-left-off', AssistaIcon.togglePrimarySidebarOff, localize('panelLeftOff', "Represents a side bar in the left position toggled off"));
+const panelRightIcon = registerIcon('panel-right', AssistaIcon.toggleSecondarySidebarOn, localize('panelRight', "Represents side bar in the right position"));
+const panelRightOffIcon = registerIcon('panel-right-off', AssistaIcon.toggleSecondarySidebarOff, localize('panelRightOff', "Represents side bar in the right position toggled off"));
+const panelIcon = registerIcon('panel-bottom', AssistaIcon.togglePanelOff, localize('panelBottom', "Represents the bottom panel"));
 const statusBarIcon = registerIcon('statusBar', Codicon.layoutStatusbar, localize('statusBarIcon', "Represents the status bar"));
 
 const panelAlignmentLeftIcon = registerIcon('panel-align-left', Codicon.layoutPanelLeft, localize('panelBottomLeft', "Represents the bottom panel alignment set to the left"));
@@ -167,7 +171,7 @@ export class ToggleSidebarPositionAction extends Action2 {
 
 registerAction2(ToggleSidebarPositionAction);
 
-const configureLayoutIcon = registerIcon('configure-layout-icon', Codicon.layout, localize('cofigureLayoutIcon', 'Icon represents workbench layout configuration.'));
+const configureLayoutIcon = registerIcon('configure-layout-icon', AssistaIcon.customiseLayout, localize('cofigureLayoutIcon', 'Icon represents workbench layout configuration.'));
 MenuRegistry.appendMenuItem(MenuId.LayoutControlMenu, {
 	submenu: MenuId.LayoutControlMenuSubmenu,
 	title: localize('configureLayout', "Configure Layout"),
@@ -1623,5 +1627,526 @@ registerAction2(class CustomizeLayoutAction extends Action2 {
 		}));
 
 		quickPick.show();
+	}
+});
+
+// --- Search Modal Overlay ---
+
+class SearchOverlayService extends Disposable {
+	private overlayElement: HTMLElement | null = null;
+	private searchView: SearchView | null = null;
+
+	show(instantiationService: IInstantiationService) {
+		if (this.overlayElement) {
+			return;
+		}
+
+		// 🔳 Overlay background
+		this.overlayElement = document.createElement('div');
+		Object.assign(this.overlayElement.style, {
+			position: 'fixed',
+			top: '0',
+			left: '0',
+			width: '100vw',
+			height: '100vh',
+			backgroundColor: 'rgba(0, 0, 0, 0.4)',
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'center',
+			zIndex: '9999',
+		});
+		this.overlayElement.addEventListener('click', (e) => {
+			if (e.target === this.overlayElement) {
+				this.hide();
+			}
+		});
+
+		// 🧱 Create and render SearchView
+		const viewPaneOptions: IViewPaneOptions = {
+			id: 'workbench.view.search',
+			title: 'Search'
+		};
+		this.searchView = instantiationService.createInstance(SearchView, viewPaneOptions);
+		this.searchView.render();
+		this.searchView.setVisible(true);
+
+		// Close overlay when a file/result is selected
+		const closeOnSelect = (this.searchView as any)['tree'].onDidOpen(() => {
+			this.hide();
+		});
+		this._register(closeOnSelect);
+
+		// 📦 Outer modal container
+		const outerContainer = document.createElement('div');
+		Object.assign(outerContainer.style, {
+			display: 'flex',
+			flexDirection: 'column',
+			backgroundColor: 'var(--vscode-editor-background, #252526)',
+			color: 'var(--vscode-editorWidget-foreground, var(--vscode-foreground, #d4d4d4))',
+			borderRadius: '8px',
+			maxWidth: '1000px',
+			width: '90vw',
+			height: '90vh',
+			boxShadow: '0 4px 16px var(--vscode-widget-shadow, rgba(0,0,0,0.3))',
+			border: '1px solid var(--vscode-editorWidget-border, #454545)',
+			overflow: 'hidden',
+			zIndex: '10000',
+			fontFamily: 'var(--vscode-font-family, sans-serif)',
+			fontSize: '13px',
+		});
+
+		// 📦 Inner padding wrapper
+		const paddedWrapper = document.createElement('div');
+		Object.assign(paddedWrapper.style, {
+			padding: '16px',
+			display: 'flex',
+			flexDirection: 'column',
+			width: '100%',
+			height: '100%',
+			boxSizing: 'border-box',
+			overflow: 'hidden',
+		});
+
+		// 📜 Style the SearchView element
+		const container = this.searchView.element;
+		container.classList.add('search-view');
+		Object.assign(container.style, {
+			display: 'flex',
+			flexDirection: 'column',
+			flex: '1 1 auto',
+			overflow: 'hidden',
+			backgroundColor: 'inherit',
+			color: 'inherit',
+		});
+
+		// 🖌️ Style textboxes, inputs, and highlights manually
+		const style = document.createElement('style');
+		style.textContent = `
+			.assista-search-overlay .search-view {
+				display: flex;
+				flex-direction: column;
+				height: 100%;
+			}
+
+			.assista-search-overlay .search-view .results {
+				flex-grow: 1;
+				min-height: 0;
+			}
+
+			.assista-search-overlay .search-view .search-widgets-container {
+				margin: 0px 12px 0 2px;
+				padding-top: 6px;
+				padding-bottom: 6px;
+			}
+
+			.assista-search-overlay .search-view .search-widget .toggle-replace-button {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 16px;
+				height: 100%;
+				color: inherit;
+				box-sizing: border-box;
+				background-position: center center;
+				background-repeat: no-repeat;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: unset;
+			}
+
+			.assista-search-overlay .search-view .search-widget .search-container,
+			.assista-search-overlay .search-view .search-widget .replace-container {
+				margin-left: 18px;
+			}
+
+			.assista-search-overlay .search-view .search-widget .monaco-inputbox > .ibwrapper {
+				height: 100%;
+			}
+
+			.assista-search-overlay .search-view .search-widget .monaco-inputbox > .ibwrapper > .mirror,
+			.assista-search-overlay .search-view .search-widget .monaco-inputbox > .ibwrapper > textarea.input {
+				padding: 3px 0px 3px 6px;
+			}
+
+			.assista-search-overlay .search-view .search-widget .monaco-inputbox > .ibwrapper > textarea.input {
+				overflow: initial;
+				height: 26px;
+				scrollbar-width: none;
+			}
+			.assista-search-overlay .search-view .search-widget .monaco-inputbox > .ibwrapper > textarea.input::-webkit-scrollbar {
+				display: none;
+			}
+
+			.assista-search-overlay .search-view .monaco-findInput,
+			.assista-search-overlay .search-view .monaco-inputbox,
+			.assista-search-overlay .search-view .monaco-inputbox .ibwrapper {
+				width: 100% !important;
+				box-sizing: border-box !important;
+			}
+			.assista-search-overlay .search-view .monaco-inputbox {
+				padding: 0 !important;
+			}
+			.assista-search-overlay .search-view input.input {
+				width: 100% !important;
+				min-width: 0 !important;
+				max-width: 100% !important;
+			}
+
+			.assista-search-overlay .search-view .search-widget .replace-container {
+				margin-top: 6px;
+				position: relative;
+				display: inline-flex;
+			}
+
+			.assista-search-overlay .search-view .search-widget .replace-input {
+				position: relative;
+				display: flex;
+				vertical-align: middle;
+				width: auto !important;
+			}
+
+			.assista-search-overlay .search-view .search-widget .replace-input > .controls {
+				position: absolute;
+				top: 3px;
+				right: 2px;
+			}
+
+			.assista-search-overlay .search-view .search-widget .replace-container.disabled {
+				display: none;
+			}
+
+			.assista-search-overlay .search-view .search-widget .replace-container .monaco-action-bar {
+				height: 25px;
+				margin-left: 4px;
+			}
+
+			.assista-search-overlay .search-view .query-details {
+				min-height: 1em;
+				position: relative;
+				margin: 0 0 0 18px;
+			}
+
+			.assista-search-overlay .search-view .query-details .more {
+				position: absolute;
+				right: -2px;
+				cursor: pointer;
+				width: 25px;
+				height: 16px;
+				color: inherit;
+				z-index: 2;
+			}
+
+			.assista-search-overlay .search-view .query-details .file-types {
+				display: none;
+			}
+			.assista-search-overlay .search-view .query-details .file-types > .monaco-inputbox {
+				width: 100%;
+				height: 25px;
+			}
+			.assista-search-overlay .search-view .query-details.more .file-types {
+				display: inherit;
+			}
+			.assista-search-overlay .search-view .query-details.more .file-types:last-child {
+				padding-bottom: 4px;
+			}
+			.assista-search-overlay .search-view .query-details.more h4 {
+				text-overflow: ellipsis;
+				overflow: hidden;
+				white-space: nowrap;
+				padding: 4px 0 0;
+				margin: 0;
+				font-size: 11px;
+				font-weight: normal;
+			}
+
+			.assista-search-overlay .search-view .messages {
+				margin-top: -5px;
+				cursor: default;
+				color: var(--vscode-search-resultsInfoForeground);
+			}
+			.assista-search-overlay .search-view .message {
+				padding: 0 22px 8px;
+				overflow-wrap: break-word;
+			}
+			.assista-search-overlay .search-view .message.ai-keywords {
+				display: -webkit-box;
+				-webkit-box-orient: vertical;
+				-webkit-line-clamp: 2;
+				line-clamp: 2;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: normal;
+				margin: 0 22px 8px;
+				padding: 0px;
+			}
+			.assista-search-overlay .search-view .message p:first-child {
+				margin-top: 0px;
+				margin-bottom: 0px;
+				padding-bottom: 4px;
+				user-select: text;
+				-webkit-user-select: text;
+			}
+			.assista-search-overlay .search-view .message a {
+				color: var(--vscode-textLink-foreground);
+			}
+			.assista-search-overlay .search-view .message a:hover,
+			.assista-search-overlay .search-view .message a:active {
+				color: var(--vscode-textLink-activeForeground);
+			}
+			.assista-search-overlay .search-view .message .keyword-refresh {
+				vertical-align: sub;
+				margin-right: 4px;
+				cursor: pointer;
+			}
+			.assista-search-overlay .search-view .message .keyword-refresh:hover,
+			.assista-search-overlay .search-view .message .keyword-refresh:active {
+				color:  var(--vscode-textLink-activeForeground);
+			}
+
+			.assista-search-overlay .search-view .foldermatch,
+			.assista-search-overlay .search-view .filematch {
+				display: flex;
+				position: relative;
+				line-height: 22px;
+				padding: 0;
+				height: 100%;
+			}
+			.assista-search-overlay .search-view .textsearchresult {
+				display: flex;
+				position: relative;
+				line-height: 22px;
+				padding: 0;
+				height: 100%;
+				font-weight: 500;
+			}
+			.assista-search-overlay .search-view .textsearchresult .actionBarContainer {
+				flex: 1 0 auto;
+				text-align: right;
+			}
+			.assista-search-overlay .search-view .textsearchresult .monaco-icon-label .codicon {
+				position: relative;
+				font-size: 12px;
+				top: 1px;
+				padding-right: 3px;
+			}
+			.assista-search-overlay .search-view .linematch {
+				position: relative;
+				line-height: 22px;
+				display: flex;
+				overflow: hidden;
+			}
+			.assista-search-overlay .search-view .linematch > .match {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: pre;
+			}
+			.assista-search-overlay .search-view .linematch .matchLineNum {
+				margin-left: 7px;
+				margin-right: 4px;
+				opacity: .7;
+				font-size: 0.9em;
+				display: none;
+			}
+			.assista-search-overlay .search-view .linematch .matchLineNum.show {
+				display: block;
+			}
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row .monaco-action-bar {
+				line-height: 1em;
+				display: none;
+				padding: 0 0.8em 0 0.4em;
+			}
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row .monaco-action-bar .action-item {
+				margin: 0;
+			}
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row:hover:not(.highlighted) .monaco-action-bar,
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row.selected .monaco-action-bar,
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row.focused .monaco-action-bar {
+				display: inline-block;
+			}
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row .monaco-action-bar .action-item {
+				margin-right: 0.2em;
+			}
+			.assista-search-overlay .search-view .monaco-list .monaco-list-row .monaco-action-bar .action-label {
+				padding: 2px;
+			}
+			.assista-search-overlay .search-view .monaco-count-badge {
+				margin-right: 12px;
+			}
+			.assista-search-overlay .search-view .replace.findInFileMatch {
+				text-decoration: line-through;
+				background-color: var(--vscode-diffEditor-removedTextBackground);
+				border: 1px solid var(--vscode-diffEditor-removedTextBackground);
+			}
+			.assista-search-overlay .search-view .findInFileMatch,
+			.assista-search-overlay .search-view .replaceMatch {
+				white-space: pre;
+			}
+			.assista-search-overlay .search-view .findInFileMatch {
+				background-color: var(--vscode-editor-findMatchHighlightBackground);
+				border: 1px solid var(--vscode-editor-findMatchHighlightBorder);
+			}
+			.assista-search-overlay .search-view .replaceMatch {
+				background-color: var(--vscode-diffEditor-insertedTextBackground);
+			}
+			.assista-search-overlay .search-view .replaceMatch:not(:empty) {
+				border: 1px solid var(--vscode-diffEditor-insertedLineBackground);
+			}
+			.assista-search-overlay .search-view .file-type-dropdown {
+				background: var(--vscode-input-background, #1e1e1e);
+				color: var(--vscode-input-foreground, #d4d4d4);
+				border: 1px solid var(--vscode-input-border, #3c3c3c);
+				border-radius: 4px;
+				padding: 2px 8px;
+				font-size: 13px;
+				min-width: auto;
+				margin-left: 6px;
+				margin-right: 1px;
+				outline: none;
+				transition: border-color 0.2s;
+			}
+			.assista-search-overlay .search-view .file-type-dropdown:focus {
+				border-color: var(--vscode-focusBorder, #007fd4);
+				box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007fd4);
+			}
+			.assista-search-overlay .search-view .file-type-dropdown:hover {
+				border-color: var(--vscode-focusBorder, #007fd4);
+			}
+
+			/* Overlay-specific additions for focus/hover on input fields */
+			.assista-search-overlay .search-view .monaco-inputbox:focus-within,
+			.assista-search-overlay .search-view input:focus {
+				border-color: var(--vscode-focusBorder, #007fd4) !important;
+				box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007fd4) !important;
+			}
+
+			.assista-search-overlay .search-view .monaco-inputbox {
+				background-color: var(--vscode-input-background) !important;
+				color: var(--vscode-input-foreground) !important;
+				border: 1px solid var(--vscode-input-border) !important;
+				padding: 4px 8px !important;
+				border-radius: 4px !important;
+				transition: border-color 0.2s;
+			}
+
+			.assista-search-overlay .search-view .results {
+				background-color: var(--vscode-editor-background) !important;
+			}
+
+			.assista-search-overlay .search-view .findMatch {
+				background-color: var(--vscode-editor-findMatchHighlightBackground, yellow) !important;
+				color: var(--vscode-editor-findMatchHighlightForeground, inherit) !important;
+				border-radius: 2px;
+				padding: 0 2px;
+			}
+			/* Remove browser focus border and box-shadow from input, and keep only the default border on .monaco-inputbox */
+			.assista-search-overlay .search-view .monaco-inputbox input:focus {
+				outline: none !important;
+				border: none !important;
+				box-shadow: none !important;
+			}
+			.assista-search-overlay .search-view .monaco-inputbox:focus-within {
+				border: 1px solid var(--vscode-input-border, transparent) !important;
+				box-shadow: none !important;
+			}
+		`;
+		mainWindow.document.head.appendChild(style);
+
+		// 🧩 Style results section
+		const resultsContainer = container.querySelector('.results') as HTMLElement;
+		if (resultsContainer) {
+			Object.assign(resultsContainer.style, {
+				overflowY: 'auto',
+				flexGrow: '1',
+				height: '100%',
+				maxHeight: '100%',
+				display: 'block',
+				position: 'relative',
+				visibility: 'visible',
+				opacity: '1',
+				zIndex: '10001',
+			});
+		}
+
+		paddedWrapper.appendChild(container);
+		outerContainer.appendChild(paddedWrapper);
+		this.overlayElement.appendChild(outerContainer);
+		mainWindow.document.body.appendChild(this.overlayElement);
+
+		// 🔁 Force layout after render
+		setTimeout(() => {
+			this.searchView?.layout(outerContainer.clientHeight - 32);
+			mainWindow.window.dispatchEvent(new Event('resize'));
+		}, 0);
+
+
+		// Copy VSCode theme CSS variables from the main workbench container (or body) to the modal container
+		const workbench = mainWindow.document.querySelector('.monaco-workbench') || mainWindow.document.body;
+		const themeVars = [
+			'--vscode-input-background',
+			'--vscode-input-foreground',
+			'--vscode-input-border',
+			'--vscode-editor-background',
+			'--vscode-editorWidget-background',
+			'--vscode-editorWidget-foreground',
+			'--vscode-editorWidget-border',
+			'--vscode-editor-findMatchHighlightBackground',
+			'--vscode-editor-findMatchHighlightForeground'
+		];
+		themeVars.forEach(v => {
+			const value = mainWindow.getComputedStyle(workbench).getPropertyValue(v);
+			if (value) {
+				container.style.setProperty(v, value);
+				outerContainer.style.setProperty(v, value);
+			}
+		});
+
+		// Add a unique class to the overlay root for scoping
+		outerContainer.classList.add('assista-search-overlay');
+	}
+
+	hide() {
+		if (this.searchView) {
+			this.searchView.setVisible(false);
+			this.searchView.dispose();
+			this.searchView = null;
+		}
+		if (this.overlayElement?.parentElement) {
+			this.overlayElement.parentElement.removeChild(this.overlayElement);
+		}
+		this.overlayElement = null;
+	}
+
+	toggle(instantiationService: IInstantiationService) {
+		this.overlayElement ? this.hide() : this.show(instantiationService);
+	}
+}
+
+const searchOverlayService = new SearchOverlayService();
+
+registerAction2(class SearchAction extends Action2 {
+	static readonly ID = 'workbench.action.searchOverlay';
+	constructor() {
+		super({
+			id: SearchAction.ID,
+			title: localize2('searchOverlay', 'Search Overlay'),
+			f1: true,
+			icon: AssistaIcon.search,
+			keybinding: {
+				weight: KeybindingWeight.WorkbenchContrib,
+				primary: KeyMod.CtrlCmd | KeyMod.Shift | KeyCode.KeyF
+			},
+			menu: [
+				{
+					id: MenuId.LayoutControlMenu,
+					group: '0_Actions'
+				}
+			]
+		});
+	}
+	run(accessor: ServicesAccessor): void {
+		const instantiationService = accessor.get(IInstantiationService);
+		searchOverlayService.toggle(instantiationService);
 	}
 });

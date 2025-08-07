@@ -14,7 +14,7 @@ import { ServicesAccessor } from '../../../platform/instantiation/common/instant
 import { inQuickPickContext, defaultQuickAccessContext, getQuickNavigateHandler } from '../quickaccess.js';
 import { ILocalizedString } from '../../../platform/action/common/action.js';
 import { AnythingQuickAccessProviderRunOptions } from '../../../platform/quickinput/common/quickAccess.js';
-import { Codicon } from '../../../base/common/codicons.js';
+import { AssistaIcon } from '../../../base/common/assistaIcons.js';
 
 //#region Quick access management commands and keys
 
@@ -153,7 +153,7 @@ registerAction2(class QuickAccessAction extends Action2 {
 		super({
 			id: 'workbench.action.quickOpenWithModes',
 			title: localize('quickOpenWithModes', "Quick Open"),
-			icon: Codicon.search,
+			icon: AssistaIcon.search,
 			menu: {
 				id: MenuId.CommandCenterCenter,
 				order: 100

@@ -27,6 +27,7 @@ interface WatermarkEntry {
 	};
 }
 
+const searchOverlay: WatermarkEntry = { text: localize('watermark.searchOverlay', "Search Overlay"), id: 'workbench.action.searchOverlay' };
 const showCommands: WatermarkEntry = { text: localize('watermark.showCommands', "Show All Commands"), id: 'workbench.action.showCommands' };
 const gotoFile: WatermarkEntry = { text: localize('watermark.quickAccess', "Go to File"), id: 'workbench.action.quickOpen' };
 const openFile: WatermarkEntry = { text: localize('watermark.openFile', "Open File"), id: 'workbench.action.files.openFile' };
@@ -43,6 +44,7 @@ const showChat = ContextKeyExpr.and(ContextKeyExpr.equals('chatSetupHidden', fal
 const openChat: WatermarkEntry = { text: localize('watermark.openChat', "Open Chat"), id: 'workbench.action.chat.open', when: { native: showChat, web: showChat } };
 
 const emptyWindowEntries: WatermarkEntry[] = coalesce([
+	searchOverlay,
 	showCommands,
 	...(isMacintosh && !isWeb ? [openFileOrFolder] : [openFile, openFolder]),
 	openRecent,
@@ -55,6 +57,7 @@ const randomEmptyWindowEntries: WatermarkEntry[] = [
 ];
 
 const workspaceEntries: WatermarkEntry[] = [
+	searchOverlay,
 	showCommands,
 	gotoFile,
 	openChat

@@ -174,6 +174,10 @@ export class SearchWidget extends Widget {
 	private _notebookFilters: NotebookFindFilters;
 	private readonly _toggleReplaceButtonListener: MutableDisposable<IDisposable>;
 
+	private selectedFileType: string | undefined;
+	private _onFileTypeChanged = new Emitter<string | undefined>();
+	public readonly onFileTypeChanged = this._onFileTypeChanged.event;
+
 	constructor(
 		container: HTMLElement,
 		options: ISearchWidgetOptions,
@@ -481,6 +485,25 @@ export class SearchWidget extends Widget {
 				this.onContextLinesChanged();
 			}));
 			dom.append(searchInputContainer, this.showContextToggle.domNode);
+		}
+
+		const togglesRow = searchInputContainer.querySelector('.monaco-findInput .controls') as HTMLElement;
+		if (togglesRow) {
+			const fileTypeDropdown = document.createElement('select');
+			fileTypeDropdown.className = 'file-type-dropdown';
+			fileTypeDropdown.style.marginLeft = '8px';
+			['All', '.js', '.xml', '.py'].forEach(ext => {
+				const option = document.createElement('option');
+				option.value = ext === 'All' ? '' : ext;
+				option.textContent = ext;
+				fileTypeDropdown.appendChild(option);
+			});
+			fileTypeDropdown.addEventListener('change', () => {
+				this.selectedFileType = fileTypeDropdown.value || undefined;
+				fileTypeDropdown.title = this.selectedFileType ? this.selectedFileType : 'All file types';
+				this._onFileTypeChanged.fire(this.selectedFileType);
+			});
+			togglesRow.appendChild(fileTypeDropdown);
 		}
 	}
 
@@ -797,6 +820,10 @@ export class SearchWidget extends Widget {
 
 	private get searchConfiguration(): ISearchConfigurationProperties {
 		return this.configurationService.getValue<ISearchConfigurationProperties>('search');
+	}
+
+	public getSelectedFileType(): string | undefined {
+		return this.selectedFileType;
 	}
 }
 

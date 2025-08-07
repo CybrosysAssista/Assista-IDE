@@ -20,7 +20,6 @@ import { EXTENSION_INSTALL_DEP_PACK_CONTEXT, EXTENSION_INSTALL_SKIP_WALKTHROUGH_
 import { ThemeIcon } from '../../../../base/common/themables.js';
 import { walkthroughs } from '../common/gettingStartedContent.js';
 import { IWorkbenchAssignmentService } from '../../../services/assignment/common/assignmentService.js';
-import { IHostService } from '../../../services/host/browser/host.js';
 import { IConfigurationService } from '../../../../platform/configuration/common/configuration.js';
 import { ILink, LinkedText, parseLinkedText } from '../../../../base/common/linkedText.js';
 import { walkthroughsExtensionPoint } from './gettingStartedExtensionPoint.js';
@@ -29,13 +28,11 @@ import { dirname } from '../../../../base/common/path.js';
 import { coalesce } from '../../../../base/common/arrays.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
 import { localize, localize2 } from '../../../../nls.js';
-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
 import { checkGlobFileExists } from '../../../services/extensions/common/workspaceContains.js';
 import { IWorkspaceContextService } from '../../../../platform/workspace/common/workspace.js';
 import { CancellationTokenSource } from '../../../../base/common/cancellation.js';
 import { IProductService } from '../../../../platform/product/common/productService.js';
 import { asWebviewUri } from '../../webview/common/webview.js';
-import { IWorkbenchLayoutService, Parts } from '../../../services/layout/browser/layoutService.js';
 import { extensionDefaultIcon } from '../../../services/extensionManagement/common/extensionsIcons.js';
 
 export const HasMultipleNewFileEntries = new RawContextKey<boolean>('hasMultipleNewFileEntries', false);
@@ -155,12 +152,9 @@ export class WalkthroughsService extends Disposable implements IWalkthroughsServ
 		@IUserDataSyncEnablementService private readonly userDataSyncEnablementService: IUserDataSyncEnablementService,
 		@IConfigurationService private readonly configurationService: IConfigurationService,
 		@IExtensionManagementService private readonly extensionManagementService: IExtensionManagementService,
-		@IHostService private readonly hostService: IHostService,
 		@IViewsService private readonly viewsService: IViewsService,
-		@ITelemetryService private readonly telemetryService: ITelemetryService,
 		@IWorkbenchAssignmentService private readonly tasExperimentService: IWorkbenchAssignmentService,
 		@IProductService private readonly productService: IProductService,
-		@IWorkbenchLayoutService private readonly layoutService: IWorkbenchLayoutService,
 	) {
 		super();
 
@@ -323,7 +317,6 @@ export class WalkthroughsService extends Disposable implements IWalkthroughsServ
 			return;
 		}
 
-		let sectionToOpen: string | undefined;
 		let sectionToOpenIndex = Math.min(); // '+Infinity';
 		await Promise.all(extension.contributes?.walkthroughs?.map(async (walkthrough, index) => {
 			const categoryID = extension.identifier.value + '#' + walkthrough.id;
@@ -343,7 +336,6 @@ export class WalkthroughsService extends Disposable implements IWalkthroughsServ
 			) {
 				this.sessionInstalledExtensions.delete(extension.identifier.value.toLowerCase());
 				if (index < sectionToOpenIndex && isNewlyInstalled) {
-					sectionToOpen = categoryID;
 					sectionToOpenIndex = index;
 				}
 			}
@@ -443,25 +435,26 @@ export class WalkthroughsService extends Disposable implements IWalkthroughsServ
 
 		this.storageService.store(walkthroughMetadataConfigurationKey, JSON.stringify([...this.metadata.entries()]), StorageScope.PROFILE, StorageTarget.USER);
 
-		const hadLastFoucs = await this.hostService.hadLastFocus();
-		if (hadLastFoucs && sectionToOpen && this.configurationService.getValue<string>('workbench.welcomePage.walkthroughs.openOnInstall')) {
-			type GettingStartedAutoOpenClassification = {
-				owner: 'lramos15';
-				comment: 'When a walkthrough is opened upon extension installation';
-				id: {
-					classification: 'PublicNonPersonalData'; purpose: 'FeatureInsight';
-					owner: 'lramos15';
-					comment: 'Used to understand what walkthroughs are consulted most frequently';
-				};
-			};
-			type GettingStartedAutoOpenEvent = {
-				id: string;
-			};
-			this.telemetryService.publicLog2<GettingStartedAutoOpenEvent, GettingStartedAutoOpenClassification>('gettingStarted.didAutoOpenWalkthrough', { id: sectionToOpen });
-			this.commandService.executeCommand('workbench.action.openWalkthrough', sectionToOpen, {
-				inactive: this.layoutService.hasFocus(Parts.EDITOR_PART) // do not steal the active editor away
-			});
-		}
+
+		// Auto-open walkthrough disabled - uncomment the following block to re-enable
+		// if (hadLastFoucs && sectionToOpen && this.configurationService.getValue<string>('workbench.welcomePage.walkthroughs.openOnInstall')) {
+		// 	type GettingStartedAutoOpenClassification = {
+		// 		owner: 'lramos15';
+		// 		comment: 'When a walkthrough is opened upon extension installation';
+		// 		id: {
+		// 		classification: 'PublicNonPersonalData'; purpose: 'FeatureInsight';
+		// 		owner: 'lramos15';
+		// 		comment: 'Used to understand what walkthroughs are consulted most frequently';
+		// 	};
+		// 	};
+		// 	type GettingStartedAutoOpenEvent = {
+		// 		id: string;
+		// 	};
+		// 	this.telemetryService.publicLog2<GettingStartedAutoOpenEvent, GettingStartedAutoOpenClassification>('gettingStarted.didAutoOpenWalkthrough', { id: sectionToOpen });
+		// 	this.commandService.executeCommand('workbench.action.openWalkthrough', sectionToOpen, {
+		// 		inactive: this.layoutService.hasFocus(Parts.EDITOR_PART) // do not steal the active editor away
+		// 	});
+		// }
 	}
 
 	private unregisterExtensionWalkthroughContributions(extension: IExtensionDescription) {

@@ -176,6 +176,7 @@ export class SearchView extends ViewPane {
 	private _cachedResults: ISearchComplete | undefined;
 	private _cachedKeywords: string[] = [];
 	public _pendingSemanticSearchPromise: Promise<ISearchComplete> | undefined;
+	// In class SearchView, add a property to store selected file types:
 	constructor(
 		options: IViewPaneOptions,
 		@IFileService private readonly fileService: IFileService,
@@ -430,6 +431,10 @@ export class SearchView extends ViewPane {
 
 		this.searchWidgetsContainerElement = dom.append(this.container, $('.search-widgets-container'));
 		this.createSearchWidget(this.searchWidgetsContainerElement);
+		// Listen to file type dropdown changes and refresh search
+		if (this.searchWidget && this.searchWidget.onFileTypeChanged) {
+			this._register(this.searchWidget.onFileTypeChanged(() => this.triggerQueryChange()));
+		}
 
 		const history = this.searchHistoryService.load();
 		const filePatterns = this.viewletState['query.filePatterns'] || '';
@@ -555,6 +560,19 @@ export class SearchView extends ViewPane {
 
 		this.updateIndentStyles(this.themeService.getFileIconTheme());
 		this._register(this.themeService.onDidFileIconThemeChange(this.updateIndentStyles, this));
+
+		// Add file type masking logic from the SearchWidget dropdown
+		const selectedFileType = this.searchWidget.getSelectedFileType && this.searchWidget.getSelectedFileType();
+		if (selectedFileType) {
+			const mask = `*${selectedFileType}`;
+			if (this.inputPatternIncludes.getValue().length > 0 || this.inputPatternExcludes.getValue().length > 0) {
+				this.inputPatternIncludes.setValue(this.inputPatternIncludes.getValue() + ',' + mask);
+				this.inputPatternExcludes.setValue(this.inputPatternExcludes.getValue() + ',' + mask);
+			} else {
+				this.inputPatternIncludes.setValue(mask);
+				this.inputPatternExcludes.setValue(mask);
+			}
+		}
 	}
 
 	private updateIndentStyles(theme: IFileIconTheme): void {
@@ -1551,7 +1569,7 @@ export class SearchView extends ViewPane {
 		const isCaseSensitive = this.searchWidget.searchInput.getCaseSensitive();
 		const contentPattern = this.searchWidget.searchInput.getValue();
 		const excludePatternText = this._getExcludePattern();
-		const includePatternText = this._getIncludePattern();
+		let includePatternText = this._getIncludePattern();
 		const useExcludesAndIgnoreFiles = this.inputPatternExcludes.useExcludesAndIgnoreFiles();
 		const onlySearchInOpenEditors = this.inputPatternIncludes.onlySearchInOpenEditors();
 
@@ -1576,7 +1594,16 @@ export class SearchView extends ViewPane {
 		};
 
 		const excludePattern = [{ pattern: this.inputPatternExcludes.getValue() }];
-		const includePattern = this.inputPatternIncludes.getValue();
+		// Add file type masking logic from the SearchWidget dropdown
+		const selectedFileType = this.searchWidget.getSelectedFileType && this.searchWidget.getSelectedFileType();
+		if (selectedFileType) {
+			const mask = `*${selectedFileType}`;
+			if (includePatternText) {
+				includePatternText += ',' + mask;
+			} else {
+				includePatternText = mask;
+			}
+		}
 
 		// Need the full match line to correctly calculate replace text, if this is a search/replace with regex group references ($1, $2, ...).
 		// 10000 chars is enough to avoid sending huge amounts of text around, if you do a replace with a longer match, it may or may not resolve the group refs correctly.
@@ -1591,7 +1618,7 @@ export class SearchView extends ViewPane {
 			disregardExcludeSettings: !useExcludesAndIgnoreFiles || undefined,
 			onlyOpenEditors: onlySearchInOpenEditors,
 			excludePattern,
-			includePattern,
+			includePattern: includePatternText,
 			previewOptions: {
 				matchLines: 1,
 				charsPerLine
@@ -1877,7 +1904,7 @@ export class SearchView extends ViewPane {
 
 	public async addAIResults() {
 		const excludePatternText = this._getExcludePattern();
-		const includePatternText = this._getIncludePattern();
+		let includePatternText = this._getIncludePattern();
 
 		this.searchWidget.searchInput?.clearMessage();
 		this.showEmptyStage();

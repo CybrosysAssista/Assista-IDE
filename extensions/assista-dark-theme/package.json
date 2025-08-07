@@ -1,0 +1,23 @@
+{
+  "name": "assista-dark-theme",
+  "displayName": "Assista Dark Theme",
+  "description": "Theme for Assista IDE",
+  "version": "1.0.0",
+  "publisher": "cybrosys-assista-ltd",
+  "isBuiltin": true,
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Themes"
+  ],
+  "contributes": {
+    "themes": [
+      {
+        "label": "Assista Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/assista-dark-color-theme.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,135 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+/* JetBrains Mono Font Definitions */
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 100;
+	font-style: normal;
+	src: url("./JetBrainsMono-Thin.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 100;
+	font-style: italic;
+
+	src: url("./JetBrainsMono-ThinItalic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 200;
+	font-style: normal;
+	src: url("./JetBrainsMono-ExtraLight.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 200;
+	font-style: italic;
+	src: url("./JetBrainsMono-ExtraLightItalic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 300;
+	font-style: normal;
+	src: url("./JetBrainsMono-Light.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 300;
+	font-style: italic;
+	src: url("./JetBrainsMono-LightItalic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 400;
+	font-style: normal;
+	src: url("./JetBrainsMono-Regular.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 400;
+	font-style: italic;
+	src: url("./JetBrainsMono-Italic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 500;
+	font-style: normal;
+	src: url("./JetBrainsMono-Medium.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 500;
+	font-style: italic;
+	src: url("./JetBrainsMono-MediumItalic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 600;
+	font-style: normal;
+	src: url("./JetBrainsMono-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 600;
+	font-style: italic;
+	src: url("./JetBrainsMono-SemiBoldItalic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 700;
+	font-style: normal;
+	src: url("./JetBrainsMono-Bold.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 700;
+	font-style: italic;
+	src: url("./JetBrainsMono-BoldItalic.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 800;
+	font-style: normal;
+	src: url("./JetBrainsMono-ExtraBold.ttf") format("truetype");
+}
+
+@font-face {
+	font-family: "JetBrains Mono";
+	font-display: block;
+	font-weight: 800;
+	font-style: italic;
+	src: url("./JetBrainsMono-ExtraBoldItalic.ttf") format("truetype");
+}

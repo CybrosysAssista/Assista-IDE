@@ -73,6 +73,8 @@ import { SaveStrategy, StateService } from '../../platform/state/node/stateServi
 import { FileUserDataProvider } from '../../platform/userData/common/fileUserDataProvider.js';
 import { addUNCHostToAllowlist, getUNCHost } from '../../base/node/unc.js';
 
+
+
 /**
  * The main VS Code entry point.
  *
@@ -99,13 +101,13 @@ class CodeMain {
 		setUnexpectedErrorHandler(err => console.error(err));
 
 		// Create services
-		const [instantiationService, instanceEnvironment, environmentMainService, configurationService, stateMainService, bufferLogger, productService, userDataProfilesMainService] = this.createServices();
+		const [instantiationService, instanceEnvironment, environmentMainService, configurationService, stateService, bufferLogger, productService, userDataProfilesMainService] = this.createServices();
 
 		try {
 
 			// Init services
 			try {
-				await this.initServices(environmentMainService, userDataProfilesMainService, configurationService, stateMainService, productService);
+				await this.initServices(environmentMainService, userDataProfilesMainService, configurationService, stateService, productService);
 			} catch (error) {
 
 				// Show a dialog for errors that can be resolved by the user

@@ -13,7 +13,7 @@ import { IColorTheme, IThemeService } from '../../../platform/theme/common/theme
 import { IStorageService, StorageScope, StorageTarget } from '../../../platform/storage/common/storage.js';
 import { IExtensionService } from '../../services/extensions/common/extensions.js';
 import { CompositeBarActionViewItem, CompositeBarAction, IActivityHoverOptions, ICompositeBarActionViewItemOptions, ICompositeBarColors } from './compositeBarActions.js';
-import { Codicon } from '../../../base/common/codicons.js';
+import { AssistaIcon } from '../../../base/common/assistaIcons.js';
 import { ThemeIcon } from '../../../base/common/themables.js';
 import { registerIcon } from '../../../platform/theme/common/iconRegistry.js';
 import { Action, IAction, Separator, SubmenuAction, toAction } from '../../../base/common/actions.js';
@@ -48,7 +48,7 @@ import { ICommandService } from '../../../platform/commands/common/commands.js';
 export class GlobalCompositeBar extends Disposable {
 
 	private static readonly ACCOUNTS_ACTION_INDEX = 0;
-	static readonly ACCOUNTS_ICON = registerIcon('accounts-view-bar-icon', Codicon.account, localize('accountsViewBarIcon', "Accounts icon in the view bar."));
+	static readonly ACCOUNTS_ICON = registerIcon('accounts-view-bar-icon', AssistaIcon.accounts, localize('accountsViewBarIcon', "Accounts icon in the view bar."));
 
 	readonly element: HTMLElement;
 

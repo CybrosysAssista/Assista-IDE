@@ -230,6 +230,7 @@
 
 .settings-editor > .settings-body .settings-tree-container .monaco-list-row.focused .settings-row-inner-container {
 	background-color: var(--vscode-settings-focusedRowBackground);
+	border-radius:5px;
 }
 
 .settings-editor > .settings-body .settings-tree-container .monaco-tree-sticky-container .monaco-list-row.focused .settings-row-inner-container {
@@ -238,11 +239,13 @@
 
 .settings-editor > .settings-body .settings-tree-container .monaco-list-row:not(.focused) .settings-row-inner-container:hover {
 	background-color: var(--vscode-settings-rowHoverBackground);
+	border-radius:5px;
 }
 
 .settings-editor > .settings-body .settings-tree-container .monaco-list:focus-within .monaco-list-row.focused .setting-item-contents,
 .settings-editor > .settings-body .settings-tree-container .monaco-list:focus-within .monaco-list-row.focused .settings-group-title-label {
 	outline: 1px solid var(--vscode-settings-focusedRowBorder);
+	border-radius:5px;
 }
 
 .settings-editor > .settings-body .settings-tree-container .monaco-list:focus-within .monaco-tree-sticky-container .monaco-list-row.focused .settings-group-title-label {

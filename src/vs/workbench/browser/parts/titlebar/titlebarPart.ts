@@ -253,6 +253,7 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 
 	protected dragRegion: HTMLElement | undefined;
 	private title!: HTMLElement;
+	private commandCenterContainer: HTMLElement | undefined;
 
 	private leftContent!: HTMLElement;
 	private centerContent!: HTMLElement;
@@ -290,6 +291,8 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 	private readonly isCompactContextKey: IContextKey<boolean>;
 
 	private readonly windowTitle: WindowTitle;
+
+	private hamburgerButton: HTMLButtonElement | undefined;
 
 	constructor(
 		id: string,
@@ -387,6 +390,12 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 	}
 
 	private recreateTitle(): void {
+		// Remove existing command center container if it exists
+		if (this.commandCenterContainer) {
+			this.commandCenterContainer.remove();
+			this.commandCenterContainer = undefined;
+		}
+
 		this.createTitle();
 
 		this._onDidChange.fire(undefined);
@@ -411,8 +420,9 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 
 		this.customMenubar.value = this.instantiationService.createInstance(CustomMenubarControl);
 
-		this.menubar = append(this.leftContent, $('div.menubar'));
-		this.menubar.setAttribute('role', 'menubar');
+		const menubarEl = $('div.menubar');
+		this.leftContent.appendChild(menubarEl);
+		this.menubar = menubarEl;
 
 		this._register(this.customMenubar.value.onVisibilityChange(e => this.onMenubarVisibilityChanged(e)));
 
@@ -459,18 +469,36 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 			this.appIcon = prepend(this.leftContent, $('a.window-appicon'));
 		}
 
+		// Hamburger Icon Button (always last in leftContent)
+		this.hamburgerButton = document.createElement('button');
+		this.hamburgerButton.className = 'hamburger-menu-button';
+		this.hamburgerButton.title = 'Show Menu';
+		this.hamburgerButton.style.setProperty('-webkit-app-region', 'no-drag');
+
+		// Create icon element with codicon
+		const iconElement = document.createElement('span');
+		iconElement.className = 'codicon-assista-hamburger';
+		this.hamburgerButton.appendChild(iconElement);
+
+		this.leftContent.appendChild(this.hamburgerButton);
+
+		// Command Center Container (after hamburger button)
+		if (this.isCommandCenterVisible) {
+			this.commandCenterContainer = append(this.leftContent, $('div.command-center-container'));
+		}
+
 		// Draggable region that we can manipulate for #52522
 		this.dragRegion = prepend(this.rootContainer, $('div.titlebar-drag-region'));
 
 		// Menubar: install a custom menu bar depending on configuration
-		if (
-			!this.isAuxiliary &&
-			!hasNativeMenu(this.configurationService, this.titleBarStyle) &&
-			(!isMacintosh || isWeb) &&
-			this.currentMenubarVisibility !== 'compact'
-		) {
-			this.installMenubar();
-		}
+		// if (
+		// 	!this.isAuxiliary &&
+		// 	!hasNativeMenu(this.configurationService, this.titleBarStyle) &&
+		// 	(!isMacintosh || isWeb) &&
+		// 	this.currentMenubarVisibility !== 'compact'
+		// ) {
+		// 	this.installMenubar();
+		// }
 
 		// Title
 		this.title = append(this.centerContent, $('div.window-title'));
@@ -548,6 +576,28 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 			}
 		}
 
+		// Hamburger click logic
+		this.hamburgerButton?.addEventListener('click', (e) => {
+			// Hide hamburger
+			if (this.hamburgerButton) { this.hamburgerButton.style.display = 'none'; }
+			// Install and show menubar
+			this.installMenubar();
+			if (this.menubar) {
+				this.menubar.style.display = '';
+			}
+			// Listen for click outside or menu close to revert
+			const closeMenu = (event: MouseEvent) => {
+				if (this.menubar && !this.menubar.contains(event.target as Node) && event.target !== this.hamburgerButton) {
+					this.uninstallMenubar();
+					if (this.hamburgerButton) { this.hamburgerButton.style.display = ''; }
+					document.removeEventListener('mousedown', closeMenu);
+				}
+			};
+			document.addEventListener('mousedown', closeMenu);
+		});
+
+		if (this.hamburgerButton) { this.hamburgerButton.style.display = ''; }
+
 		this.updateStyles();
 
 		return this.element;
@@ -571,10 +621,15 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 			}
 		}
 
-		// Menu Title
+		// Command Center
 		else {
+			// Create command center in left content area if container doesn't exist
+			if (!this.commandCenterContainer) {
+				this.commandCenterContainer = append(this.leftContent, $('div.command-center-container'));
+			}
+
 			const commandCenter = this.instantiationService.createInstance(CommandCenterControl, this.windowTitle, this.hoverDelegate);
-			reset(this.title, commandCenter.element);
+			reset(this.commandCenterContainer, commandCenter.element);
 			this.titleDisposables.add(commandCenter);
 		}
 	}
@@ -878,6 +933,12 @@ export class BrowserTitlebarPart extends Part implements ITitlebarPart {
 
 	override dispose(): void {
 		this._onWillDispose.fire();
+
+		// Clean up command center container
+		if (this.commandCenterContainer) {
+			this.commandCenterContainer.remove();
+			this.commandCenterContainer = undefined;
+		}
 
 		super.dispose();
 	}

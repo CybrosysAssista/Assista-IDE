@@ -96,3 +96,9 @@
 	top: 33px; /* at the bottom of the 35px height title container */
 	z-index: 5; /* on top of things */
 }
+.part.editor {
+    border-radius: 6px;
+	/* height: calc(100% - 6px); */
+	/* width: calc(100% - 12px);
+	margin: 0 6px; */
+}

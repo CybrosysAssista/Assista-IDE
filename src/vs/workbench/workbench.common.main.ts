@@ -15,6 +15,7 @@ import './browser/workbench.contribution.js';
 
 //#region --- workbench actions
 
+import './browser/actions/assistaWelcomeModal.js';
 import './browser/actions/textInputActions.js';
 import './browser/actions/developerActions.js';
 import './browser/actions/helpActions.js';

@@ -319,6 +319,54 @@ function initialize() {
 }
 initialize();
 
+// Register Assista icons
+function initializeAssistaIcons() {
+	const iconRegistry = getIconRegistry();
+
+	// Register the assistaicon font
+	const assistaFontDefinition = {
+		src: [{
+			location: URI.parse('./Assista-icons.ttf'),
+			format: 'truetype'
+		}]
+	};
+	iconRegistry.registerIconFont('assistaicon', assistaFontDefinition);
+
+	// Register all Assista icons
+	const assistaIcons = [
+		{ id: 'assista-toggle-panel-off', char: '\ue800', desc: 'Toggle panel off state' },
+		{ id: 'assista-toggle-panel-on', char: '\ue80e', desc: 'Toggle panel on state' },
+		{ id: 'assista-debugger', char: '\ue80f', desc: 'Debugger' },
+		{ id: 'assista-extensions', char: '\ue810', desc: 'Extensions' },
+		{ id: 'assista-folder', char: '\ue811', desc: 'Folder' },
+		{ id: 'assista-toggle-secondary-sidebar-off', char: '\ue805', desc: 'Toggle secondary sidebar off' },
+		{ id: 'assista-toggle-secondary-sidebar-on', char: '\ue806', desc: 'Toggle secondary sidebar on' },
+		{ id: 'assista-customise-layout', char: '\ue803', desc: 'Customise layout' },
+		{ id: 'assista-accounts', char: '\ue802', desc: 'Accounts' },
+		{ id: 'assista-restart', char: '\ue804', desc: 'Restart' },
+		{ id: 'assista-toggle-primary-sidebar-off', char: '\ue813', desc: 'Toggle primary sidebar off' },
+		{ id: 'assista-toggle-primary-sidebar-on', char: '\ue801', desc: 'Toggle primary sidebar on position' },
+		{ id: 'assista-run-and-debug', char: '\ue808', desc: 'Run and debug' },
+		{ id: 'assista-search', char: '\ue809', desc: 'Search' },
+		{ id: 'assista-settings', char: '\ue80a', desc: 'Settings' },
+		{ id: 'assista-source-control', char: '\ue80b', desc: 'Source control' },
+		{ id: 'assista-stop-debugging', char: '\ue80c', desc: 'Stop debugging' },
+		{ id: 'assista-run', char: '\ue807', desc: 'Run' },
+		{ id: 'assista-hamburger', char: '\ue812', desc: 'Hamburger menu' }
+	];
+
+	for (const icon of assistaIcons) {
+		iconRegistry.registerIcon(icon.id, {
+			fontCharacter: icon.char,
+			font: {
+				id: 'assistaicon',
+				definition: assistaFontDefinition
+			}
+		}, icon.desc);
+	}
+}
+initializeAssistaIcons();
+
 export const iconsSchemaId = 'vscode://schemas/icons';
 
 const schemaRegistry = platform.Registry.as<IJSONContributionRegistry>(JSONExtensions.JSONContribution);

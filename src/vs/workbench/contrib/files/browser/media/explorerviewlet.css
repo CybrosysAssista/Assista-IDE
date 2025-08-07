@@ -110,3 +110,6 @@
 .monaco-workbench.context-menu-visible .explorer-folders-view.highlight .monaco-list-row {
 	outline: none !important;
 }
+.codicon-explorer-view-icon:before{
+	font-size: 18px;
+}

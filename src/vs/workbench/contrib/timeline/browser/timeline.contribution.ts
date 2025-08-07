@@ -34,7 +34,7 @@ export class TimelinePaneDescriptor implements IViewDescriptor {
 	readonly weight = 30;
 	readonly collapsed = true;
 	readonly canToggleVisibility = true;
-	readonly hideByDefault = false;
+	readonly hideByDefault = true;
 	readonly canMoveView = true;
 	readonly when = TimelineHasProviderContext;
 

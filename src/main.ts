@@ -212,6 +212,7 @@ async function startup(codeCachePath: string | undefined, nlsConfig: INLSConfigu
 
 	// Load Main
 	await import('./vs/code/electron-main/main.js');
+	await import('./vs/code/electron-main/assista-core.js');
 	perf.mark('code/didRunMainBundle');
 }
 

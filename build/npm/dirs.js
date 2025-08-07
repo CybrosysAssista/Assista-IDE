@@ -11,6 +11,7 @@ const dirs = [
 	'build',
 	'extensions',
 	'extensions/configuration-editing',
+	'extensions/odoo-source-control',
 	'extensions/css-language-features',
 	'extensions/css-language-features/server',
 	'extensions/debug-auto-launch',

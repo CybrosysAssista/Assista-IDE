@@ -27,13 +27,13 @@ import { IInstantiationService, ServicesAccessor } from '../../../../platform/in
 import { KeymapExtensions } from '../common/extensionsUtils.js';
 import { areSameExtensions, getIdAndVersion } from '../../../../platform/extensionManagement/common/extensionManagementUtil.js';
 import { EditorPaneDescriptor, IEditorPaneRegistry } from '../../../browser/editor.js';
-import { LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
+import { ILifecycleService, LifecyclePhase } from '../../../services/lifecycle/common/lifecycle.js';
 import { URI, UriComponents } from '../../../../base/common/uri.js';
 import { ExtensionActivationProgress } from './extensionsActivationProgress.js';
 import { onUnexpectedError } from '../../../../base/common/errors.js';
 import { ExtensionDependencyChecker } from './extensionsDependencyChecker.js';
 import { CancellationToken } from '../../../../base/common/cancellation.js';
-import { IViewContainersRegistry, ViewContainerLocation, Extensions as ViewContainerExtensions } from '../../../common/views.js';
+import { IViewContainersRegistry, IViewDescriptorService, Extensions as ViewContainerExtensions, ViewContainerLocation, ViewContainer } from '../../../common/views.js';
 import { IViewsService } from '../../../services/views/common/viewsService.js';
 import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
 import { IPreferencesService } from '../../../services/preferences/common/preferences.js';
@@ -2043,3 +2043,55 @@ Registry.as<IConfigurationMigrationRegistry>(ConfigurationMigrationExtensions.Co
 			return [];
 		}
 	}]);
+
+class OpenCybrosysAssistaActivityBarContribution implements IWorkbenchContribution {
+	constructor(
+		@ICommandService private readonly commandService: ICommandService,
+		@ILifecycleService lifecycleService: ILifecycleService,
+		@IViewDescriptorService private readonly viewDescriptorService: IViewDescriptorService
+	) {
+		// Ensure extension is in auxiliary bar and opened after restoration
+		lifecycleService.when(LifecyclePhase.Restored).then(() => {
+			this.ensureExtensionInAuxiliaryBar().catch(console.warn);
+		});
+	}
+
+	private async ensureExtensionInAuxiliaryBar(): Promise<void> {
+		const containerId = 'workbench.view.extension.cybrosys-assista-ActivityBar';
+		const registry = Registry.as<IViewContainersRegistry>('workbench.registry.view.containers');
+		const maxRetries = 30;
+		const retryDelay = 1000;
+
+		let container: ViewContainer | undefined;
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			container = registry.get(containerId);
+			if (container) {
+				console.log(`Container ${containerId} found on attempt ${attempt}.`);
+				break;}
+			if (attempt === maxRetries) {
+				console.warn(`Container ${containerId} not found after ${maxRetries} attempts.`);
+				return;
+			}
+			await new Promise(resolve => setTimeout(resolve, retryDelay));
+		}
+
+		// Move to auxiliary bar
+		this.viewDescriptorService.moveViewContainerToLocation(container!, ViewContainerLocation.AuxiliaryBar);
+
+		// Retry opening the view
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				await this.commandService.executeCommand(containerId);
+				break;
+			} catch (error) {
+				if (attempt === maxRetries) {
+					console.warn(`Failed to open ${containerId} after ${maxRetries} attempts:`, error);
+					break;
+				}
+				await new Promise(resolve => setTimeout(resolve, retryDelay));
+			}
+		}
+	}
+}
+
+workbenchRegistry.registerWorkbenchContribution(OpenCybrosysAssistaActivityBarContribution, LifecyclePhase.Restored);

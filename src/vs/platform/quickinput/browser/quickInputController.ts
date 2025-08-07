@@ -51,7 +51,6 @@ export class QuickInputController extends Disposable {
 	private idPrefix: string;
 	private ui: QuickInputUI | undefined;
 	private dimension?: dom.IDimension;
-	private titleBarOffset?: number;
 	private enabled = true;
 	private readonly onDidAcceptEmitter = this._register(new Emitter<void>());
 	private readonly onDidCustomEmitter = this._register(new Emitter<void>());
@@ -135,6 +134,9 @@ export class QuickInputController extends Disposable {
 
 			return this.ui;
 		}
+
+		// Create backdrop for blur effect
+		dom.append(this._container, $('.quick-input-backdrop'));
 
 		const container = dom.append(this._container, $('.quick-input-widget.show-file-icons'));
 		container.tabIndex = -1;
@@ -673,6 +675,12 @@ export class QuickInputController extends Disposable {
 		const backKeybindingLabel = this.options.backKeybindingLabel();
 		backButton.tooltip = backKeybindingLabel ? localize('quickInput.backWithKeybinding', "Back ({0})", backKeybindingLabel) : localize('quickInput.back', "Back");
 
+		// Show backdrop for blur effect
+		const backdrop = this._container.querySelector('.quick-input-backdrop') as HTMLElement;
+		if (backdrop) {
+			backdrop.classList.add('visible');
+		}
+
 		ui.container.style.display = '';
 		this.updateLayout();
 		this.dndController?.layoutContainer();
@@ -736,6 +744,13 @@ export class QuickInputController extends Disposable {
 		const focusChanged = container && !dom.isAncestorOfActiveElement(container);
 		this.controller = null;
 		this.onHideEmitter.fire();
+
+		// Hide backdrop
+		const backdrop = this._container.querySelector('.quick-input-backdrop') as HTMLElement;
+		if (backdrop) {
+			backdrop.classList.remove('visible');
+		}
+
 		if (container) {
 			container.style.display = 'none';
 		}
@@ -807,7 +822,6 @@ export class QuickInputController extends Disposable {
 
 	layout(dimension: dom.IDimension, titleBarOffset: number): void {
 		this.dimension = dimension;
-		this.titleBarOffset = titleBarOffset;
 		this.updateLayout();
 	}
 
@@ -817,8 +831,13 @@ export class QuickInputController extends Disposable {
 			const width = Math.min(this.dimension!.width * 0.62 /* golden cut */, QuickInputController.MAX_WIDTH);
 			style.width = width + 'px';
 
-			// Position
-			style.top = `${this.viewState?.top ? Math.round(this.dimension!.height * this.viewState.top) : this.titleBarOffset}px`;
+			// Position - center vertically if no saved position
+			if (this.viewState?.top) {
+				style.top = `${Math.round(this.dimension!.height * this.viewState.top)}px`;
+			} else {
+				const approximateHeight = 500;
+				style.top = `${Math.round((this.dimension!.height - approximateHeight) / 2)}px`;
+			}
 			style.left = `${Math.round((this.dimension!.width * (this.viewState?.left ?? 0.5 /* center */)) - (width / 2))}px`;
 
 			this.ui.inputBox.layout();
@@ -917,7 +936,6 @@ class QuickInputDragAndDropController extends Disposable {
 	readonly dndViewState = observableValue<{ top?: number; left?: number; done: boolean } | undefined>(this, undefined);
 
 	private readonly _snapThreshold = 20;
-	private readonly _snapLineHorizontalRatio = 0.25;
 
 	private readonly _controlsOnLeft: boolean;
 	private readonly _controlsOnRight: boolean;
@@ -1094,7 +1112,7 @@ class QuickInputDragAndDropController extends Disposable {
 	}
 
 	private _getCenterYSnapValue() {
-		return Math.round(this._container.clientHeight * this._snapLineHorizontalRatio);
+		return Math.round((this._container.clientHeight - this._quickInputContainer.clientHeight) / 2);
 	}
 
 	private _getCenterXSnapValue() {
