@@ -1,49 +1,143 @@
+[![cybrosys-assista](https://snapcraft.io/cybrosys-assista/badge.svg)](https://snapcraft.io/cybrosys-assista)
+
+
 # Cybrosys Assista IDE
 
-**Cybrosys Assista IDE** is the first Integrated Development Environment (IDE) tailored specifically for **Odoo fullstack developers**. Built on top of **[Code - OSS](https://github.com/microsoft/vscode)**, the open-source foundation of Visual Studio Code, Assista IDE extends its capabilities with powerful, Odoo-specific enhancements.
+**Cybrosys Assista IDE** is the first Integrated Development Environment (IDE) specifically designed for **Odoo fullstack developers**.\
+Built on top of [**Code - OSS**](https://github.com/microsoft/vscode), the open-source foundation of Visual Studio Code, it enhances the VS Code experience with powerful, Odoo-specific features for backend, frontend (OWL/website), and deployment workflows.
 
 ![image](https://github.com/user-attachments/assets/5115271a-e990-4c32-8022-468132aca627)
 
+---
 
-Whether you're working on the backend, frontend (OWL/website), or deploying your Odoo code, Cybrosys Assista IDE offers a seamless and efficient development experience optimized for the Odoo ecosystem.
+## Overview
 
-> 🧩 **Powered by Code - OSS**  
-> Assista IDE is built as a fork of Microsoft's Code - OSS project, bringing the best of VS Code with deep integration for Odoo development.
+Cybrosys Assista IDE streamlines Odoo development by providing built-in tooling, automation, and integrations tailored for Odoo projects. From intelligent code completion to integrated deployment helpers, it allows developers to focus on building features rather than setting up environments or repeating manual tasks.
 
-## Key Highlights
-
-- ⚡ **Odoo-focused tooling** — built-in support for models, views, controllers, OWL components, QWeb templates, and more.
-- 💡 **AI-assisted coding** — intelligent code completion, snippet generation, and context-aware suggestions.
-- 🛠 **Module generators** — quickly scaffold basic, advanced, OWL, or website modules with ease.
-- 🚀 **Integrated deployment tools** — push code, generate configuration files, and manage services directly from the IDE.
-- 🔍 **Smart search** — global search with file-type filters and Odoo-specific keyword matching.
-- 🐞 **Robust debugging** — easily debug both Python and JavaScript Odoo code right within the IDE.
-
-## AI Features (Powered by RooCode Fork)
-
-The AI coding agent in Assista is a customized fork of the [RooCode](https://github.com/roocode-ai/roocode) project, integrated directly into the IDE for seamless productivity:
-
-- 🤖 **Autonomous Coding Agent** — Suggests, generates, and debugs code based on context.
-- 🔑 **Bring Your Own API Key** — Connect to models from providers like OpenAI, Anthropic, Groq, etc.
-- 🧠 **Model Metadata Viewer** — View available models, their capabilities, pricing, and latency.
-- 🗝 **Secret Storage** — Your API keys are securely stored using Assista's encrypted secret storage.
-- ⚙️ **Express Setup** — Connect via OpenRouter or Requesty with minimal configuration.
-
-This integration makes Assista a smart companion for Odoo development, reducing repetitive tasks and increasing code quality.
-
-## Why Choose Cybrosys Assista IDE?
-
-Cybrosys Assista IDE empowers you to:
-
-✅ Boost productivity with Odoo-ready code templates  
-✅ Minimize errors with real-time linting and smart validation  
-✅ Streamline deployments with built-in Odoo management tools  
-✅ Focus on development — not on environment setup or repetitive tasks
-
-## Get Started
-
-👉 Check out the [Installation Guide](https://assista.cybrosys.com/assista-ide/installation) to set up your environment and dive into Odoo development today!
+**Powered by Code - OSS**\
+Assista IDE is a customized fork of Microsoft's Code - OSS project, enriched with deep Odoo integration for an optimized and efficient development workflow.
 
 ---
 
-We’re committed to continuously evolving Cybrosys Assista IDE and supporting the Odoo developer community. Have ideas or feedback? Please [reach out to us](/support/).
+## Key Features
+
+### Odoo-Centric Development
+
+- Native support for Odoo **models, views, controllers, OWL components, QWeb templates**, and website modules.
+- **Smart Odoo snippets** to quickly scaffold boilerplate code.
+- Built-in **module generators** for:
+  - Basic modules
+  - Advanced modules
+  - OWL (Odoo Web Library) modules
+  - Website modules
+
+---
+
+## Expert AI Modes
+
+Cybrosys Assista includes multiple expert modes tailored to specific development needs:
+
+- **Code** — General programming assistance.
+- **Odoo Technical Expert** — Backend development (models, controllers, views).
+- **Odoo Functional Expert** — Guidance on Odoo flows and business logic.
+- **Odoo OWL JS Expert** — Specialized frontend help (OWL components, QWeb templates).
+- **Debug** — Assist in error tracking and issue resolution.
+- **Ask** — Open-ended queries.
+
+---
+
+## Why Choose Cybrosys Assista IDE?
+
+- Boost productivity with Odoo-ready templates and snippets.
+- Minimize errors through real-time linting and smart validation.
+- Simplify deployments with integrated configuration and management tools.
+- Reduce setup time by using pre-configured environments and automation.
+- Work within a single, consistent interface for backend, frontend, and deployment tasks.
+
+---
+
+## Installation Guide
+
+### Install on Ubuntu/Debian
+
+```bash
+sudo snap install cybrosys-assista --classic
+```
+
+### Update to the Latest Version
+
+```bash
+sudo snap refresh cybrosys-assista
+```
+
+### Launch
+
+From the applications menu or terminal:
+
+```bash
+cybrosys-assista
+```
+
+---
+
+## Configuration Guide
+
+After installation, the **Welcome Screen** provides two options:
+
+1. **Open Existing Project** — Load an existing Odoo project.
+2. **Download Odoo** — Clone the Odoo source code directly from GitHub.
+
+### Download Odoo Source
+
+1. Choose the desired Odoo version (e.g., 18.0, 17.0, 16.0).
+2. Select a destination folder.
+3. Assista automatically downloads and sets up the source code.
+
+### Create `odoo.conf`
+
+- Enter:
+  - Database user
+  - Database password
+  - XMLRPC port
+  - Addons path (if required)
+
+### Python Virtual Environment
+
+- Select Odoo version and Python version.
+- The IDE will set up the environment and dependencies.
+
+### Debugger Configuration
+
+- Python executable path
+- Odoo bin path
+- Odoo configuration path
+
+
+---
+
+## Development Workflow
+
+### Module Generation
+
+Use built-in generators to scaffold:
+
+- Basic modules
+- Advanced modules
+- OWL modules
+- Website modules
+
+---
+
+## Documentation & Support
+
+- [Installation Guide](https://docs.cybrosys.com/assista-ide/installation)
+- [Contact Support](https://assista.cybrosys.com/contact)
+- [Snap Store Page](https://snapcraft.io/cybrosys-assista)
+
+---
+
+**Cybrosys Assista IDE** is continuously updated to serve the Odoo developer community with precision, performance, and reliability.
+
+
+[![Get it from the Snap Store](https://snapcraft.io/en/dark/install.svg)](https://snapcraft.io/cybrosys-assista)
+
