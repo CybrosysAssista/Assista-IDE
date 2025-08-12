@@ -2,7 +2,8 @@
 
 **Cybrosys Assista IDE** is the first Integrated Development Environment (IDE) tailored specifically for **Odoo fullstack developers**. Built on top of **[Code - OSS](https://github.com/microsoft/vscode)**, the open-source foundation of Visual Studio Code, Assista IDE extends its capabilities with powerful, Odoo-specific enhancements.
 
-![image](https://github.com/user-attachments/assets/ecaa476c-2d33-4252-a345-a18f2a2464db)
+![image](https://github.com/user-attachments/assets/5115271a-e990-4c32-8022-468132aca627)
+
 
 Whether you're working on the backend, frontend (OWL/website), or deploying your Odoo code, Cybrosys Assista IDE offers a seamless and efficient development experience optimized for the Odoo ecosystem.
 
